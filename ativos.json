@@ -1,0 +1,37 @@
+[
+    {
+        "id": 1,
+        "tipo": "Notebook",
+        "nome": "Notebook A",
+        "responsavel": "Jo\u00e3o",
+        "setor": "TI",
+        "vulnerabilidades": [
+            "Vuln1",
+            "Vuln2"
+        ],
+        "memoria_ram": "16GB"
+    },
+    {
+        "id": 2,
+        "tipo": "Roteador",
+        "nome": "Roteador B",
+        "responsavel": "Maria",
+        "setor": "Redes",
+        "vulnerabilidades": [
+            "Vuln3"
+        ],
+        "modelo": "Modelo X"
+    },
+    {
+        "id": 3,
+        "tipo": "Servidor",
+        "nome": "Servidor C",
+        "responsavel": "Carlos",
+        "setor": "Infraestrutura",
+        "vulnerabilidades": [
+            "Vuln4",
+            "Vuln5"
+        ],
+        "processador": "Intel Xeon"
+    }
+]

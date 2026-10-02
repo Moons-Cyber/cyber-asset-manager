@@ -21,3 +21,17 @@ class Ativo(ABC):
         print("Vulnerabilidades:")
         for vulnerabilidade in self.vulnerabilidades:
             print(f"- {vulnerabilidade}")
+
+    def para_dict(self):
+        return {
+            "id": self.id,
+            "tipo": self.obter_tipo(),
+            "nome": self.nome,
+            "responsavel": self.responsavel,
+            "setor": self.setor,
+            "vulnerabilidades": self.vulnerabilidades
+        }
+
+    @abstractmethod
+    def obter_tipo(self):
+        pass

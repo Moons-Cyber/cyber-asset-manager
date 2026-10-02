@@ -8,3 +8,9 @@ class Servidor (Ativo):
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()
         print(f"Processador: {self.processador}")
+    def obter_tipo(self):
+        return "Servidor"
+    def para_dict(self):
+        data = super().para_dict()
+        data["processador"] = self.processador
+        return data
