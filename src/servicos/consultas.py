@@ -17,9 +17,5 @@ def contar_vulnerabilidades(ativos):
     return reduce(lambda total, ativo: total + len(ativo.vulnerabilidades), ativos, 0)
 
 
-def buscar_por_nome_recursivo(ativos, nome, indice=0):
-    if indice >= len(ativos):
-        return None
-    if ativos[indice].nome == nome:
-        return ativos[indice]
-    return buscar_por_nome_recursivo(ativos, nome, indice + 1)
+
+

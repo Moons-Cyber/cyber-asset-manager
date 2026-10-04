@@ -45,12 +45,3 @@ for ativo in ordenar_por_nome(ativos):
 print("\n=== TOTAL DE VULNERABILIDADES ===")
 print(contar_vulnerabilidades(ativos))
 
-
-print("\n=== BUSCAR ATIVO POR NOME (RECURSIVO) ===")
-
-resultado = buscar_por_nome_recursivo(ativos, "Servidor C")
-if resultado:
-    print("Ativo encontrado:")
-    resultado.exibir_detalhes()
-else:
-    print("Ativo não encontrado.")
