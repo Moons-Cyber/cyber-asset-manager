@@ -6,8 +6,18 @@
         "responsavel": "Jo\u00e3o",
         "setor": "TI",
         "vulnerabilidades": [
-            "Vuln1",
-            "Vuln2"
+            {
+                "descricao": "Windows desatualizado",
+                "categoria": "Atualiza\u00e7\u00e3o",
+                "severidade": 8.5,
+                "status": "Aberta"
+            },
+            {
+                "descricao": "Senha fraca",
+                "categoria": "Seguran\u00e7a",
+                "severidade": 7.0,
+                "status": "Em tratamento"
+            }
         ],
         "memoria_ram": "16GB"
     },
@@ -18,7 +28,12 @@
         "responsavel": "Maria",
         "setor": "Redes",
         "vulnerabilidades": [
-            "Vuln3"
+            {
+                "descricao": "Firmware desatualizado",
+                "categoria": "Atualiza\u00e7\u00e3o",
+                "severidade": 6.0,
+                "status": "Aberta"
+            }
         ],
         "modelo": "Modelo X"
     },
@@ -29,8 +44,18 @@
         "responsavel": "Carlos",
         "setor": "Infraestrutura",
         "vulnerabilidades": [
-            "Vuln4",
-            "Vuln5"
+            {
+                "descricao": "Porta aberta",
+                "categoria": "Seguran\u00e7a",
+                "severidade": 9.0,
+                "status": "Aberta"
+            },
+            {
+                "descricao": "Sistema operacional desatualizado",
+                "categoria": "Atualiza\u00e7\u00e3o",
+                "severidade": 8.0,
+                "status": "Em tratamento"
+            }
         ],
         "processador": "Intel Xeon"
     }

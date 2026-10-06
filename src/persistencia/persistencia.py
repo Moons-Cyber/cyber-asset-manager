@@ -2,6 +2,7 @@ import json
 from src.modelos.notebook import Notebook
 from src.modelos.roteador import Roteador
 from src.modelos.servidor import Servidor
+from src.modelos.vulnerabilidades import Vulnerabilidade
 
 
 class Persistencia:
@@ -25,6 +26,9 @@ class Persistencia:
                 classe = tipos[dado["tipo"]]
                 dados_ativo = dado.copy()
                 dados_ativo.pop("tipo")
+                dados_ativo["vulnerabilidades"] = [
+                    Vulnerabilidade(**vuln) for vuln in dado["vulnerabilidades"]
+                ]
                 ativo = classe(**dados_ativo)
                 ativos.append(ativo)
             return ativos

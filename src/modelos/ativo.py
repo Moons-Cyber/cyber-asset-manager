@@ -29,7 +29,10 @@ class Ativo(ABC):
             "nome": self.nome,
             "responsavel": self.responsavel,
             "setor": self.setor,
-            "vulnerabilidades": self.vulnerabilidades
+            "vulnerabilidades": [
+                vulnerabilidade.para_dict()
+                for vulnerabilidade in self.vulnerabilidades
+            ]
         }
 
     @abstractmethod
