@@ -24,3 +24,12 @@ class GerenciadorAtivos:
         self.persistencia.salvar_dados(ativos, self.caminho_arquivo)
 
         return ativo
+
+    def buscar_ativo_por_id(self, idenficador):
+        ativos = self.listar_ativos()
+
+        for ativo in ativos:
+            if ativo.id == idenficador:
+                return ativo
+        
+        return None
