@@ -1,0 +1,24 @@
+************* Module exemplo_antes
+src/qualidade/exemplo_antes.py:2:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:3:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:4:0: W0311: Bad indentation. Found 2 spaces, expected 8 (bad-indentation)
+src/qualidade/exemplo_antes.py:5:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:8:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:9:0: W0311: Bad indentation. Found 2 spaces, expected 8 (bad-indentation)
+src/qualidade/exemplo_antes.py:10:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:13:0: C0301: Line too long (166/100) (line-too-long)
+src/qualidade/exemplo_antes.py:13:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:14:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:15:0: W0311: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+src/qualidade/exemplo_antes.py:17:0: C0304: Final newline missing (missing-final-newline)
+src/qualidade/exemplo_antes.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+src/qualidade/exemplo_antes.py:1:0: C0116: Missing function or method docstring (missing-function-docstring)
+src/qualidade/exemplo_antes.py:7:0: C0116: Missing function or method docstring (missing-function-docstring)
+src/qualidade/exemplo_antes.py:7:11: W0622: Redefining built-in 'id' (redefined-builtin)
+src/qualidade/exemplo_antes.py:9:17: C0321: More than one statement on a single line (multiple-statements)
+src/qualidade/exemplo_antes.py:12:0: C0116: Missing function or method docstring (missing-function-docstring)
+src/qualidade/exemplo_antes.py:17:24: C0321: More than one statement on a single line (multiple-statements)
+
+-----------------------------------
+Your code has been rated at 0.00/10
+
