@@ -1,1 +1,3 @@
 __pycache__/
+# Ambiente virtual Python
+.venv/

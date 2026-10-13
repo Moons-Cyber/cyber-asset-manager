@@ -1,3 +1,6 @@
+import numpy as np 
+
+
 """Funções para construir o modelo de risco próprio dos ativos."""
 
 
@@ -157,3 +160,80 @@ def construir_matriz_dependencias(ativos, dependencias):
             )
 
     return matriz
+
+
+
+def calcular_risco_efetivo(ativos, dependencias):
+    """
+    Calcula o risco próprio e o risco efetivo de cada ativo.
+    
+    Resolve (I - A)x = b, verificando a invertbilidade
+    antes de resolver o sistema.
+    
+    """
+
+    if not ativos:
+        return []
+    
+    matriz_incidencia, severidades, _ = (
+        construir_matriz_incidencia(ativos)
+        )
+
+    riscos_proprios = multiplicar_matriz_vetor(
+        matriz_incidencia,
+        severidades,
+    )
+
+    matriz_dependencias = construir_matriz_dependencias(
+        ativos,
+        dependencias,
+    )
+
+    quantidade = len(ativos)
+
+    matriz_sistema = (
+        np.eye(quantidade)
+        - np.asarray(matriz_dependencias, dtype=float)
+    )
+
+    vetor_risco_proprio = np.asarray(
+        riscos_proprios,
+        dtype=float,
+    )
+
+    # Verifica a invertibilidade numérica antes de resolver.
+    posto = np.linalg.matrix_rank(matriz_sistema)
+
+    if posto < quantidade:
+        raise ValueError(
+            "A matriz I - A não é invertível; "
+            "não é possível calcular o risco efetivo."
+        )
+
+    try:
+        riscos_efetivos = np.linalg.solve(
+            matriz_sistema,
+            vetor_risco_proprio,
+        )
+    except np.linalg.LinAlgError as erro:
+        raise ValueError(
+            "Não foi possível resolver o sistema de risco."
+        ) from erro
+
+    resultados = []
+
+    for indice, ativo in enumerate(ativos):
+        resultados.append(
+            {
+                "id": ativo.id,
+                "nome": ativo.nome,
+                "risco_proprio": float(
+                    riscos_proprios[indice]
+                ),
+                "risco_efetivo": float(
+                    riscos_efetivos[indice]
+                ),
+            }
+        )
+
+    return resultados
