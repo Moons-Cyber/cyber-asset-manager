@@ -1,6 +1,7 @@
 
 """Ponto de entrada do sistema de inventário de ativos."""
-
+from src.servicos.gerenciador_dependencias import GerenciadorDependencias
+from src.servicos.analise_risco import calcular_risco_efetivo
 from src.modelos.notebook import Notebook
 from src.modelos.roteador import Roteador
 from src.modelos.servidor import Servidor
@@ -260,9 +261,34 @@ def remover_ativo(gerenciador):
         print("Não foi possível remover o ativo.")
 
 
+def analisar_risco(gerenciador_ativos, gerenciador_dependencias):
+    """Calcula e exibe o risco efetivo de todos os ativos."""
+    ativos = gerenciador_ativos.listar_ativos()
+    
+    if not ativos:
+        print("Nenhum ativo cadastrado para análise.")
+        return
+
+    dependencias = gerenciador_dependencias.listar_dependencias()
+
+    print("\n=== ANÁLISE DE RISCO ===")
+    try:
+        resultados = calcular_risco_efetivo(ativos, dependencias)
+        
+        for resultado in resultados:
+            print(
+                f"ID: {resultado['id']} | Ativo: {resultado['nome']}\n"
+                f"  Risco Próprio: {resultado['risco_proprio']:.2f}\n"
+                f"  Risco Efetivo: {resultado['risco_efetivo']:.2f}\n"
+            )
+    except ValueError as erro:
+        print(f"Erro na análise de risco: {erro}")
+
+
 def main():
     """Executa o menu principal do inventário."""
     gerenciador = GerenciadorAtivos("ativos.json")
+    gerenciador_dependencias = GerenciadorDependencias("dependencias.json")
 
     while True:
         print("\n========== INVENTÁRIO DE ATIVOS ==========")
@@ -272,7 +298,8 @@ def main():
         print("4. Atualizar ativo")
         print("5. Remover ativo")
         print("6. Consultar vulnerabilidades de um ativo")
-        print("7. Sair")
+        print("7. Analisar Risco Efetivo")
+        print("0. Sair")
         print("==========================================")
 
         opcao = input("Escolha uma opção: ").strip()
@@ -290,11 +317,12 @@ def main():
         elif opcao == "6":
             consultar_vulnerabilidades_do_ativo(gerenciador)
         elif opcao == "7":
+            analisar_risco(gerenciador, gerenciador_dependencias)
+        elif opcao == "0":
             print("Encerrando o inventário. Até mais!")
             break
         else:
-            print("Opção inválida. Escolha uma opção de 1 a 6.")
-
+            print("Opção inválida. Escolha uma opção de 0 a 7.")
 
 if __name__ == "__main__":
     main()

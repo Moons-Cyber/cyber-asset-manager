@@ -5,13 +5,8 @@ import numpy as np
 
 
 def _chave_vulnerabilidade(vulnerabilidade):
-    """Cria uma chave para identificar uma vulnerabilidade."""
-    return (
-        vulnerabilidade.descricao,
-        vulnerabilidade.categoria,
-        float(vulnerabilidade.severidade),
-        vulnerabilidade.status,
-    )
+    """Identifica a coluna de M pelo ID da vulnerabilidade (ex.: CVE-2021-44228)."""
+    return vulnerabilidade.id
 
 
 def construir_matriz_incidencia(ativos):
@@ -40,7 +35,7 @@ def construir_matriz_incidencia(ativos):
                         "descricao": vulnerabilidade.descricao,
                         "categoria": vulnerabilidade.categoria,
                         "severidade": float(vulnerabilidade.severidade),
-                        "status": vulnerabilidade.status,
+                        "status": vulnerabilidade.status.value,
                     }
                 )
 
