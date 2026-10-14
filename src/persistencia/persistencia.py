@@ -6,29 +6,37 @@ from src.modelos.vulnerabilidades import Vulnerabilidade
 
 
 class Persistencia:
+    TIPOS = {
+        "Notebook": Notebook,
+        "Roteador": Roteador,
+        "Servidor": Servidor,
+    }
+
     def salvar_dados(self, ativos, nome_arquivo):
-        with open(nome_arquivo, 'w') as arquivo:
-            dados = [ativo.para_dict() for ativo in ativos]
-            json.dump(dados, arquivo, indent=4)
+        dados = [ativo.para_dict() for ativo in ativos]
+        with open(nome_arquivo, "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, indent=4, ensure_ascii=False)
 
     def carregar_dados(self, nome_arquivo):
-        with open(nome_arquivo, 'r') as arquivo:
-            dados = json.load(arquivo)
-            tipos = {
-                "Notebook": Notebook,   
-                "Roteador": Roteador,
-                "Servidor": Servidor
-            }
+        try:
+            with open(nome_arquivo, "r", encoding="utf-8") as arquivo:
+                dados = json.load(arquivo)
+        except json.JSONDecodeError as erro:
+            raise ValueError(f"Arquivo '{nome_arquivo}' com JSON inválido: {erro}") from erro
 
-            ativos = []
+        if not isinstance(dados, list):
+            raise ValueError("O arquivo de ativos deve conter uma lista JSON.")
 
-            for dado in dados:
-                classe = tipos[dado["tipo"]]
-                dados_ativo = dado.copy()
-                dados_ativo.pop("tipo")
-                dados_ativo["vulnerabilidades"] = [
-                    Vulnerabilidade(**vuln) for vuln in dado["vulnerabilidades"]
-                ]
-                ativo = classe(**dados_ativo)
-                ativos.append(ativo)
-            return ativos
+        ativos = []
+        for dado in dados:
+            tipo = dado.get("tipo")
+            if tipo not in self.TIPOS:
+                raise ValueError(f"Tipo de ativo desconhecido no arquivo: {tipo!r}")
+
+            dados_ativo = dado.copy()
+            dados_ativo.pop("tipo")
+            dados_ativo["vulnerabilidades"] = [
+                Vulnerabilidade.de_dict(v) for v in dado.get("vulnerabilidades", [])
+            ]
+            ativos.append(self.TIPOS[tipo](**dados_ativo))
+        return ativos
