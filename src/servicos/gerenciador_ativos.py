@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from src.modelos.enums import StatusVulnerabilidade
 from src.modelos.vulnerabilidades import Vulnerabilidade
 from src.persistencia.persistencia import Persistencia
 
@@ -144,3 +145,81 @@ class GerenciadorAtivos:
                 return True
 
         return False
+
+    def buscar_ativos_por_nome(self, texto):
+        """Busca ativos cujo nome contenha o texto, ignorando maiúsculas.
+
+        Devolve uma lista (e não um só ativo) porque o nome, ao contrário
+        do ID, não é único: "Servidor" pode casar com vários ativos.
+        """
+        termo = texto.strip().lower()
+
+        if not termo:
+            return []
+
+        return [
+            ativo
+            for ativo in self.listar_ativos()
+            if termo in ativo.nome.lower()
+        ]
+
+    def adicionar_vulnerabilidade(self, identificador, vulnerabilidade):
+        """Acrescenta UMA vulnerabilidade a um ativo já cadastrado.
+
+        Diferente de atualizar_ativo(vulnerabilidades=...), que substitui
+        a lista inteira, aqui as existentes são preservadas.
+        Devolve o ativo, ou None se o ID não existir.
+        """
+        if not isinstance(vulnerabilidade, Vulnerabilidade):
+            raise TypeError("Informe um objeto Vulnerabilidade.")
+
+        ativos = self.listar_ativos()
+        ativo = next(
+            (item for item in ativos if item.id == identificador),
+            None,
+        )
+
+        if ativo is None:
+            return None
+
+        # O mesmo ID duas vezes no mesmo ativo viraria uma só coluna em M.
+        if any(v.id == vulnerabilidade.id for v in ativo.vulnerabilidades):
+            raise ValueError(
+                f"O ativo '{ativo.nome}' já possui a vulnerabilidade "
+                f"{vulnerabilidade.id}."
+            )
+
+        ativo.vulnerabilidades.append(vulnerabilidade)
+        self.persistencia.salvar_dados(ativos, self.caminho_arquivo)
+
+        return ativo
+
+    def atualizar_status_vulnerabilidade(
+        self, identificador, id_vulnerabilidade, novo_status
+    ):
+        """Muda o status de uma vulnerabilidade de um ativo.
+
+        Devolve a vulnerabilidade alterada, ou None se o ativo não existir.
+        """
+        if not isinstance(novo_status, StatusVulnerabilidade):
+            raise TypeError("O status deve ser um StatusVulnerabilidade.")
+
+        ativos = self.listar_ativos()
+        ativo = next(
+            (item for item in ativos if item.id == identificador),
+            None,
+        )
+
+        if ativo is None:
+            return None
+
+        for vulnerabilidade in ativo.vulnerabilidades:
+            if vulnerabilidade.id == id_vulnerabilidade:
+                vulnerabilidade.status = novo_status
+                self.persistencia.salvar_dados(ativos, self.caminho_arquivo)
+                return vulnerabilidade
+
+        raise ValueError(
+            f"O ativo '{ativo.nome}' não possui a vulnerabilidade "
+            f"{id_vulnerabilidade}."
+        )
