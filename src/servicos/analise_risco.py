@@ -170,77 +170,94 @@ def construir_matriz_dependencias(ativos, dependencias):
 
 
 
+# Limites usados para julgar a confiabilidade numérica do sistema.
+LIMITE_CONDICAO_SINGULAR = 1e12   # acima disso, tratamos como não invertível
+LIMITE_CONDICAO_ALERTA = 1e6      # acima disso, avisamos que a solução é frágil
+
+
+def _montar_sistema(ativos, dependencias):
+    """Monta (I - A) e o vetor b = M v a partir dos dados persistidos."""
+    matriz_incidencia, severidades, _ = construir_matriz_incidencia(ativos)
+    riscos_proprios = multiplicar_matriz_vetor(matriz_incidencia, severidades)
+    matriz_dependencias = construir_matriz_dependencias(ativos, dependencias)
+
+    sistema = np.eye(len(ativos)) - np.asarray(matriz_dependencias, dtype=float)
+    return sistema, riscos_proprios
+
+
+def _diagnosticar(sistema):
+    """Avalia se (I - A) pode ser resolvida com confiança.
+
+    Três medidas:
+      * posto: precisa ser n (posto cheio);
+      * número de condição: mede quanto um erro pequeno nos dados é
+        ampliado na solução. Perto de infinito = quase singular;
+      * determinante: informativo. NÃO decide sozinho, porque o seu valor
+        depende do tamanho do sistema (com muitos ativos, um determinante
+        legítimo pode ser minúsculo) e porque em ponto flutuante um
+        determinante "zero" quase nunca é exatamente 0.
+    """
+    n = sistema.shape[0]
+    posto = int(np.linalg.matrix_rank(sistema))
+    determinante = float(np.linalg.det(sistema))
+
+    try:
+        condicao = float(np.linalg.cond(sistema))
+    except np.linalg.LinAlgError:
+        condicao = float("inf")
+
+    return {
+        "ordem": n,
+        "posto": posto,
+        "determinante": determinante,
+        "condicao": condicao,
+        "invertivel": posto == n and condicao < LIMITE_CONDICAO_SINGULAR,
+        "frágil": condicao > LIMITE_CONDICAO_ALERTA,
+    }
+
+
+def diagnosticar_sistema(ativos, dependencias):
+    """Devolve o diagnóstico de (I - A), ou None se não há ativos."""
+    if not ativos:
+        return None
+
+    sistema, _ = _montar_sistema(ativos, dependencias)
+    return _diagnosticar(sistema)
+
+
 def calcular_risco_efetivo(ativos, dependencias):
     """
     Calcula o risco próprio e o risco efetivo de cada ativo.
-    
-    Resolve (I - A)x = b, verificando a invertbilidade
-    antes de resolver o sistema.
-    
-    """
 
+    Resolve (I - A)x = b, verificando a invertibilidade antes de resolver.
+    Usa np.linalg.solve (e não a inversa), que é mais preciso e rápido.
+    """
     if not ativos:
         return []
-    
-    matriz_incidencia, severidades, _ = (
-        construir_matriz_incidencia(ativos)
-        )
 
-    riscos_proprios = multiplicar_matriz_vetor(
-        matriz_incidencia,
-        severidades,
-    )
+    sistema, riscos_proprios = _montar_sistema(ativos, dependencias)
+    diagnostico = _diagnosticar(sistema)
 
-    matriz_dependencias = construir_matriz_dependencias(
-        ativos,
-        dependencias,
-    )
-
-    quantidade = len(ativos)
-
-    matriz_sistema = (
-        np.eye(quantidade)
-        - np.asarray(matriz_dependencias, dtype=float)
-    )
-
-    vetor_risco_proprio = np.asarray(
-        riscos_proprios,
-        dtype=float,
-    )
-
-    # Verifica a invertibilidade numérica antes de resolver.
-    posto = np.linalg.matrix_rank(matriz_sistema)
-
-    if posto < quantidade:
+    if not diagnostico["invertivel"]:
         raise ValueError(
-            "A matriz I - A não é invertível; "
-            "não é possível calcular o risco efetivo."
+            "A matriz I - A não é invertível (ou é numericamente "
+            "singular); não é possível calcular o risco efetivo."
         )
 
     try:
         riscos_efetivos = np.linalg.solve(
-            matriz_sistema,
-            vetor_risco_proprio,
+            sistema,
+            np.asarray(riscos_proprios, dtype=float),
         )
     except np.linalg.LinAlgError as erro:
-        raise ValueError(
-            "Não foi possível resolver o sistema de risco."
-        ) from erro
+        raise ValueError("Não foi possível resolver o sistema de risco.") from erro
 
-    resultados = []
-
-    for indice, ativo in enumerate(ativos):
-        resultados.append(
-            {
-                "id": ativo.id,
-                "nome": ativo.nome,
-                "risco_proprio": float(
-                    riscos_proprios[indice]
-                ),
-                "risco_efetivo": float(
-                    riscos_efetivos[indice]
-                ),
-            }
-        )
-
-    return resultados
+    return [
+        {
+            "id": ativo.id,
+            "nome": ativo.nome,
+            "risco_proprio": float(riscos_proprios[indice]),
+            "risco_efetivo": float(riscos_efetivos[indice]),
+        }
+        for indice, ativo in enumerate(ativos)
+    ]
