@@ -17,16 +17,21 @@ class GerenciadorDependencias:
         if not self.caminho_arquivo.exists():
             return []
 
-        with self.caminho_arquivo.open(
-            "r",
-            encoding="utf-8",
-        ) as arquivo:
-            dados = json.load(arquivo)
+        try:
+            with self.caminho_arquivo.open(
+                "r",
+                encoding="utf-8",
+            ) as arquivo:
+                dados = json.load(arquivo)
 
-        return [
-            Dependencia(**dado)
-            for dado in dados
-        ]
+            return [
+                Dependencia(**dado)
+                for dado in dados
+            ]
+        except (json.JSONDecodeError, TypeError) as erro:
+            raise ValueError(
+                f"Arquivo '{self.caminho_arquivo}' inválido: {erro}"
+            ) from erro
 
     def salvar_dependencias(self, dependencias):
         """Salva a lista de dependências em formato JSON."""
@@ -88,3 +93,43 @@ class GerenciadorDependencias:
         self.salvar_dependencias(dependencias)
 
         return dependencia
+
+    def remover_dependencia(self, origem_id, destino_id):
+        """Remove uma dependência específica. Devolve True se existia."""
+        dependencias = self.listar_dependencias()
+
+        restantes = [
+            d for d in dependencias
+            if not (
+                d.ativo_origem_id == origem_id
+                and d.ativo_destino_id == destino_id
+            )
+        ]
+
+        if len(restantes) == len(dependencias):
+            return False
+
+        self.salvar_dependencias(restantes)
+        return True
+
+    def remover_dependencias_do_ativo(self, identificador):
+        """Remove toda dependência que envolva o ativo, como origem ou destino.
+
+        Chamada quando um ativo é excluído: sem isso sobrariam dependências
+        "órfãs" apontando para um ativo que não existe mais, e a análise de
+        risco falharia.
+        Devolve quantas dependências foram removidas.
+        """
+        dependencias = self.listar_dependencias()
+
+        restantes = [
+            d for d in dependencias
+            if identificador not in (d.ativo_origem_id, d.ativo_destino_id)
+        ]
+
+        removidas = len(dependencias) - len(restantes)
+
+        if removidas:
+            self.salvar_dependencias(restantes)
+
+        return removidas
