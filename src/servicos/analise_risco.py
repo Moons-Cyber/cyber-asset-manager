@@ -5,7 +5,12 @@ import numpy as np
 
 
 def _chave_vulnerabilidade(vulnerabilidade):
-    """Identifica a coluna de M pelo ID da vulnerabilidade (ex.: CVE-2021-44228)."""
+    """Identifica a coluna de M pelo ID da vulnerabilidade (ex.: CVE-2021-44228).
+
+    Antes a chave era (descrição, categoria, severidade, status): mudar o status
+    criava uma coluna nova. Com o ID, a mesma vulnerabilidade em vários ativos
+    cai sempre na mesma coluna, que é o significado de M_ij no enunciado.
+    """
     return vulnerabilidade.id
 
 
@@ -26,6 +31,10 @@ def construir_matriz_incidencia(ativos):
     # Registra cada vulnerabilidade distinta na ordem de aparição.
     for ativo in ativos:
         for vulnerabilidade in ativo.vulnerabilidades:
+            # Corrigida não afeta mais o ativo: fica fora de M.
+            if not vulnerabilidade.afeta_risco:
+                continue
+
             chave = _chave_vulnerabilidade(vulnerabilidade)
 
             if chave not in indices:
@@ -48,6 +57,9 @@ def construir_matriz_incidencia(ativos):
     # Marca com 1 as vulnerabilidades associadas a cada ativo.
     for indice_ativo, ativo in enumerate(ativos):
         for vulnerabilidade in ativo.vulnerabilidades:
+            if not vulnerabilidade.afeta_risco:
+                continue
+
             chave = _chave_vulnerabilidade(vulnerabilidade)
             indice_coluna = indices[chave]
             matriz[indice_ativo][indice_coluna] = 1
