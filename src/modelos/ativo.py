@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 
 
 class Ativo(ABC):
+    campo_especifico = None
+    rotulo_campo = None
+
     def __init__(self, id, nome, responsavel,setor,vulnerabilidades):
         self.id = id
         self.nome = nome

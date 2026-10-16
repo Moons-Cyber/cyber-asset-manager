@@ -4,12 +4,25 @@ from enum import Enum, IntEnum
 
 
 class TipoAtivo(IntEnum):
-    """Tipos de ativo. Cada tipo tem um código inteiro."""
+    """Tipos de ativo. Cada tipo tem um código inteiro (requisito 2 do T1)."""
 
     NOTEBOOK = 1
     SERVIDOR = 2
     ROTEADOR = 3
     BANCO_DADOS = 4
+
+    @property
+    def rotulo(self):
+        """Nome para exibir ao usuário (ex.: 'Banco de dados')."""
+        return _ROTULOS_TIPO[self]
+
+
+_ROTULOS_TIPO = {
+    TipoAtivo.NOTEBOOK: "Notebook",
+    TipoAtivo.SERVIDOR: "Servidor",
+    TipoAtivo.ROTEADOR: "Roteador",
+    TipoAtivo.BANCO_DADOS: "Banco de dados",
+}
 
 
 class Severidade(Enum):
@@ -36,11 +49,10 @@ class Severidade(Enum):
 
 
 class StatusVulnerabilidade(Enum):
-    """Situação de tratamento da vulnerabilidade.
+    """Situação de tratamento da vulnerabilidade."""
 
-    Os valores são exatamente os textos que já existem no seu ativos.json,
-    então os dados antigos continuam carregando sem migração.
-    """
+    
+    
 
     ABERTA = "Aberta"
     EM_TRATAMENTO = "Em tratamento"
