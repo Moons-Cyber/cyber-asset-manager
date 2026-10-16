@@ -28,6 +28,7 @@ def resposta_nvd(metricas):
 class TesteCliente(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
         self.cache = Path(self.tmp.name) / "cache.json"
         patcher = mock.patch("src.servicos.cliente_nvd.time.sleep")
         patcher.start()
@@ -113,20 +114,66 @@ class TesteVulnerabilidade(unittest.TestCase):
             Vulnerabilidade("x", "y", 5, "qualquer coisa")
 
 
+# Amostra no formato ANTIGO (sem "id" nem "fonte" nas vulnerabilidades).
+# Fica embutida aqui para o teste NÃO depender do ativos.json real do projeto,
+# que o usuário altera ao cadastrar ativos de verdade.
+DADOS_ANTIGOS = [
+    {
+        "id": 1, "tipo": "Notebook", "nome": "Notebook A",
+        "responsavel": "João", "setor": "TI",
+        "vulnerabilidades": [
+            {"descricao": "Windows desatualizado", "categoria": "Atualização",
+             "severidade": 8.5, "status": "Aberta"},
+            {"descricao": "Senha fraca", "categoria": "Segurança",
+             "severidade": 7.0, "status": "Em tratamento"},
+        ],
+        "memoria_ram": "16GB",
+    },
+    {
+        "id": 2, "tipo": "Roteador", "nome": "Roteador B",
+        "responsavel": "Maria", "setor": "Redes",
+        "vulnerabilidades": [
+            {"descricao": "Firmware desatualizado", "categoria": "Atualização",
+             "severidade": 6.0, "status": "Aberta"},
+        ],
+        "modelo": "Modelo X",
+    },
+    {
+        "id": 3, "tipo": "Servidor", "nome": "Servidor C",
+        "responsavel": "Carlos", "setor": "Infraestrutura",
+        "vulnerabilidades": [],
+        "processador": "Intel Xeon",
+    },
+]
+
+
 class TesteDadosAntigos(unittest.TestCase):
-    def test_ativos_json_original_carrega(self):
-        ativos = Persistencia().carregar_dados("ativos.json")
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.arquivo = Path(self.tmp.name) / "antigo.json"
+        self.arquivo.write_text(
+            json.dumps(DADOS_ANTIGOS, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_formato_antigo_carrega(self):
+        ativos = Persistencia().carregar_dados(self.arquivo)
         self.assertEqual(len(ativos), 3)
         v = ativos[0].vulnerabilidades[0]
         self.assertTrue(v.id.startswith("LOCAL-"))
         self.assertEqual(v.status, StatusVulnerabilidade.ABERTA)
+        self.assertEqual(v.fonte, "manual")
+
+    def test_id_local_e_estavel_entre_leituras(self):
+        a = Persistencia().carregar_dados(self.arquivo)[0].vulnerabilidades[0].id
+        b = Persistencia().carregar_dados(self.arquivo)[0].vulnerabilidades[0].id
+        self.assertEqual(a, b)
 
     def test_ida_e_volta_no_json(self):
-        ativos = Persistencia().carregar_dados("ativos.json")
-        with tempfile.TemporaryDirectory() as d:
-            arq = Path(d) / "a.json"
-            Persistencia().salvar_dados(ativos, arq)
-            de_novo = Persistencia().carregar_dados(arq)
+        ativos = Persistencia().carregar_dados(self.arquivo)
+        saida = Path(self.tmp.name) / "novo.json"
+        Persistencia().salvar_dados(ativos, saida)
+        de_novo = Persistencia().carregar_dados(saida)
         self.assertEqual([a.para_dict() for a in ativos],
                          [a.para_dict() for a in de_novo])
 
