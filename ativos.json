@@ -1,0 +1,87 @@
+[
+    {
+        "id": 1,
+        "tipo": "Notebook",
+        "nome": "Notebook Acer",
+        "responsavel": "GAbriel",
+        "setor": "TI",
+        "vulnerabilidades": [
+            {
+                "id": "CVE-2021-44228",
+                "descricao": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI...",
+                "categoria": "Security",
+                "severidade": 10.0,
+                "status": "Aberta",
+                "fonte": "NVD",
+                "descricao_original": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects."
+            }
+        ],
+        "memoria_ram": "16GB"
+    },
+    {
+        "id": 2,
+        "tipo": "Servidor",
+        "nome": "Servidor do RH",
+        "responsavel": "Bruna",
+        "setor": "RH",
+        "vulnerabilidades": [
+            {
+                "id": "CVE-2021-44228",
+                "descricao": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI...",
+                "categoria": "Segurança",
+                "severidade": 10.0,
+                "status": "Aberta",
+                "fonte": "NVD",
+                "descricao_original": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects."
+            },
+            {
+                "id": "CVE-2017-0144",
+                "descricao": "The SMBv1 server in Microsoft Windows Vista SP2; Windows Server 2008 SP2 and R2 SP1; Windows 7 SP1;...",
+                "categoria": "Segurança",
+                "severidade": 8.8,
+                "status": "Em tratamento",
+                "fonte": "NVD",
+                "descricao_original": "The SMBv1 server in Microsoft Windows Vista SP2; Windows Server 2008 SP2 and R2 SP1; Windows 7 SP1; Windows 8.1; Windows Server 2012 Gold and R2; Windows RT 8.1; and Windows 10 Gold, 1511, and 1607; and Windows Server 2016 allows remote attackers to execute arbitrary code via crafted packets, aka \"Windows SMB Remote Code Execution Vulnerability.\" This vulnerability is different from those described in CVE-2017-0143, CVE-2017-0145, CVE-2017-0146, and CVE-2017-0148."
+            }
+        ],
+        "processador": "AMD EPYC 9965"
+    },
+    {
+        "id": 3,
+        "tipo": "Roteador",
+        "nome": "Roteador TI",
+        "responsavel": "Sergio",
+        "setor": "TI",
+        "vulnerabilidades": [
+            {
+                "id": "CVE-2025-14737",
+                "descricao": "Command Injection vulnerability in TP-Link WA850RE (httpd modules) allows authenticated adjacent...",
+                "categoria": "Segurança",
+                "severidade": 8.0,
+                "status": "Aberta",
+                "fonte": "NVD",
+                "descricao_original": "Command Injection vulnerability in TP-Link WA850RE (httpd modules) allows authenticated adjacent attacker to inject arbitrary commands.This issue affects: ≤ WA850RE V2_160527, \n\n≤ \n\nWA850RE V3_160922."
+            }
+        ],
+        "modelo": "Starlink"
+    },
+    {
+        "id": 4,
+        "tipo": "BancoDeDados",
+        "nome": "Banco de PostgreSQL - Banco de Dados de Produção.",
+        "responsavel": "Luna",
+        "setor": "TI",
+        "vulnerabilidades": [
+            {
+                "id": "CVE-2026-2006",
+                "descricao": "Missing validation of multibyte character length in PostgreSQL text manipulation allows a database...",
+                "categoria": "execução remota de código",
+                "severidade": 8.8,
+                "status": "Aberta",
+                "fonte": "NVD",
+                "descricao_original": "Missing validation of multibyte character length in PostgreSQL text manipulation allows a database user to issue crafted queries that achieve a buffer overrun.  That suffices to execute arbitrary code as the operating system user running the database.  Versions before PostgreSQL 18.2, 17.8, 16.12, 15.16, and 14.21 are affected."
+            }
+        ],
+        "sgbd": "PostgreeSQL"
+    }
+]
