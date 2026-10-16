@@ -64,5 +64,24 @@
             }
         ],
         "modelo": "Starlink"
+    },
+    {
+        "id": 4,
+        "tipo": "BancoDeDados",
+        "nome": "Banco de PostgreSQL - Banco de Dados de Produção.",
+        "responsavel": "Luna",
+        "setor": "TI",
+        "vulnerabilidades": [
+            {
+                "id": "CVE-2026-2006",
+                "descricao": "Missing validation of multibyte character length in PostgreSQL text manipulation allows a database...",
+                "categoria": "execução remota de código",
+                "severidade": 8.8,
+                "status": "Aberta",
+                "fonte": "NVD",
+                "descricao_original": "Missing validation of multibyte character length in PostgreSQL text manipulation allows a database user to issue crafted queries that achieve a buffer overrun.  That suffices to execute arbitrary code as the operating system user running the database.  Versions before PostgreSQL 18.2, 17.8, 16.12, 15.16, and 14.21 are affected."
+            }
+        ],
+        "sgbd": "PostgreeSQL"
     }
 ]
