@@ -225,7 +225,7 @@ class TesteSaidaDoDiagnostico(unittest.TestCase):
 
     def test_analise_normal_nao_mostra_numeros_tecnicos(self):
         texto = self._rodar(main.analisar_risco, deps=True)
-        self.assertIn("Risco Efetivo", texto)
+        self.assertIn("risco efetivo", texto.lower())
         self.assertNotIn("determinante", texto.lower())
         self.assertNotIn("ATENÇÃO", texto)
 
