@@ -1,6 +1,5 @@
 """Serviço responsável pelo gerenciamento dos ativos."""
 
-
 from pathlib import Path
 
 from src.modelos.enums import StatusVulnerabilidade
@@ -9,20 +8,9 @@ from src.persistencia.persistencia import Persistencia
 
 CAMPOS_COMUNS = {"nome", "responsavel", "setor", "vulnerabilidades"}
 
-CAMPOS_ESPECIFICOS = {
-    "Notebook": {"memoria_ram"},
-    "Servidor": {"processador"},
-    "Roteador": {"modelo"},
-}
-
 
 class GerenciadorAtivos:
-    """Gerencia cadastro, consulta, atualização e remoção de ativos.
-
-    Os objetos devolvidos são os mesmos que estão na memória do gerenciador.
-    Para alterar um ativo, use os métodos daqui (atualizar_ativo etc.):
-    mudar o objeto por fora altera a memória sem gravar no arquivo.
-    """
+    """Gerencia cadastro, consulta, atualização e remoção de ativos."""
 
     def __init__(self, caminho_arquivo="ativos.json"):
         self.caminho_arquivo = Path(caminho_arquivo)
@@ -32,13 +20,8 @@ class GerenciadorAtivos:
 
     # ------------------------------------------------------------ memória
     def _indice(self):
-        """Devolve o dict de ativos, lendo o arquivo só na primeira vez.
+        """Devolve o dict de ativos, lendo o arquivo só na primeira vez."""
 
-        A carga é preguiçosa de propósito: se o arquivo estiver corrompido,
-        o erro aparece quando o usuário usa o menu (onde é tratado), e não
-        ao iniciar o programa. Como _ativos só é preenchido quando a leitura
-        dá certo, corrigir o arquivo e tentar de novo funciona.
-        """
         if self._ativos is None:
             self._ativos = self._ler_do_arquivo()
 
@@ -132,9 +115,8 @@ class GerenciadorAtivos:
         if ativo is None:
             return None
 
-        campos_permitidos = CAMPOS_COMUNS | CAMPOS_ESPECIFICOS.get(
-            ativo.obter_tipo(), set()
-        )
+        # Polimorfismo: cada tipo de ativo diz qual é o seu campo próprio.
+        campos_permitidos = CAMPOS_COMUNS | {ativo.campo_especifico}
 
         campos_invalidos = set(alteracoes) - campos_permitidos
 

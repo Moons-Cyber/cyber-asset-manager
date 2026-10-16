@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 
+from src.modelos.banco_dados import BancoDeDados
 from src.modelos.notebook import Notebook
 from src.modelos.roteador import Roteador
 from src.modelos.servidor import Servidor
@@ -13,6 +14,7 @@ class Persistencia:
         "Notebook": Notebook,
         "Roteador": Roteador,
         "Servidor": Servidor,
+        "BancoDeDados": BancoDeDados,
     }
 
     def salvar_dados(self, ativos, nome_arquivo):
