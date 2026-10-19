@@ -5,13 +5,18 @@ import numpy as np
 
 
 def _chave_vulnerabilidade(vulnerabilidade):
-    """Identifica a coluna de M pelo ID da vulnerabilidade (ex.: CVE-2021-44228).
+    """Identifica a coluna de M pelo par (ID, nota).
 
-    Antes a chave era (descrição, categoria, severidade, status): mudar o status
-    criava uma coluna nova. Com o ID, a mesma vulnerabilidade em vários ativos
-    cai sempre na mesma coluna, que é o significado de M_ij no enunciado.
+    - O STATUS fica de fora: mudar de "Aberta" para "Em tratamento" não pode
+      criar uma vulnerabilidade nova.
+    - A NOTA entra na chave porque cada coluna de M tem UMA nota em v. Sem
+      isso, duas vulnerabilidades com o mesmo ID e notas diferentes (ex.: a
+      mesma descrição manual com nota 10 num ativo e 5 em outro, ou um CVE
+      com nota do NVD num ativo e digitada em outro) cairiam na mesma coluna
+      e a segunda nota seria descartada em silêncio, errando o risco.
+    Mesmo ID com a mesma nota continua compartilhando a coluna.
     """
-    return vulnerabilidade.id
+    return (vulnerabilidade.id, float(vulnerabilidade.severidade))
 
 
 def construir_matriz_incidencia(ativos):
