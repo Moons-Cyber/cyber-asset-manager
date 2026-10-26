@@ -1,4 +1,8 @@
-import numpy as np 
+import math
+
+import numpy as np
+
+from src.modelos.dependencia import soma_de_pesos_valida 
 
 
 """Funções para construir o modelo de risco próprio dos ativos."""
@@ -78,21 +82,24 @@ def construir_matriz_incidencia(ativos):
 
 
 def multiplicar_matriz_vetor(matriz, vetor):
-    """Calcula o produto de uma matriz por um vetor."""
-    for linha in matriz:
-        if len(linha) != len(vetor):
-            raise ValueError(
-                "As colunas da matriz devem corresponder "
-                "ao tamanho do vetor."
-            )
+    """Calcula b = M v com o produto matricial do NumPy (operador @).
 
-    return [
-        sum(
-            coeficiente * vetor[indice]
-            for indice, coeficiente in enumerate(linha)
+    Atenção: em NumPy, * multiplica elemento a elemento; o produto de matrizes
+    é @. Aqui M é n x m (ativos x vulnerabilidades) e v tem m notas.
+    """
+    if len(matriz) == 0:
+        return []
+
+    m = np.asarray(matriz, dtype=float)
+    v = np.asarray(vetor, dtype=float)
+
+    if m.ndim != 2 or v.ndim != 1 or m.shape[1] != v.shape[0]:
+        raise ValueError(
+            "As colunas da matriz devem corresponder "
+            "ao tamanho do vetor."
         )
-        for linha in matriz
-    ]
+
+    return (m @ v).tolist()
 
 
 def construir_matriz_dependencias(ativos, dependencias):
@@ -161,9 +168,9 @@ def construir_matriz_dependencias(ativos, dependencias):
         matriz[indice_destino][indice_origem] = float(peso)
 
     for indice, linha in enumerate(matriz):
-        soma_pesos = sum(linha)
+        soma_pesos = math.fsum(linha)
 
-        if soma_pesos >= 1:
+        if not soma_de_pesos_valida(soma_pesos):
             identificador = ids_ativos[indice]
 
             raise ValueError(
@@ -176,14 +183,28 @@ def construir_matriz_dependencias(ativos, dependencias):
 
 
 # Limites usados para julgar a confiabilidade numérica do sistema.
-LIMITE_CONDICAO_SINGULAR = 1e12   # acima disso, tratamos como não invertível
-LIMITE_CONDICAO_ALERTA = 1e6      # acima disso, avisamos que a solução é frágil
+# Regra da aula (S3_12): acima de 1/eps a matriz é singular para o computador
+# (rejeita); acima de 1e8 sobram menos de ~8 dos 16 dígitos do float64 (avisa).
+LIMITE_CONDICAO_SINGULAR = float(1 / np.finfo(float).eps)   # float puro, não np.float64
+LIMITE_CONDICAO_ALERTA = 1e8
+
+
+def construir_matriz_exposicao(ativos):
+    """Matriz diagonal F: o fator de exposição de cada ativo, na ordem dos ativos.
+
+    Cada ativo informa o seu fator (polimorfismo): o código não precisa saber
+    se é servidor ou roteador, só pergunta ao objeto.
+    """
+    return np.diag([ativo.obter_fator_exposicao() for ativo in ativos])
 
 
 def _montar_sistema(ativos, dependencias):
-    """Monta (I - A) e o vetor b = M v a partir dos dados persistidos."""
+    """Monta (I - A) e o risco próprio b = F (M v) a partir dos dados persistidos."""
     matriz_incidencia, severidades, _ = construir_matriz_incidencia(ativos)
-    riscos_proprios = multiplicar_matriz_vetor(matriz_incidencia, severidades)
+    soma_das_notas = multiplicar_matriz_vetor(matriz_incidencia, severidades)   # M v
+    riscos_proprios = (
+        construir_matriz_exposicao(ativos) @ np.asarray(soma_das_notas, dtype=float)
+    ).tolist()                                                                   # F (M v)
     matriz_dependencias = construir_matriz_dependencias(ativos, dependencias)
 
     sistema = np.eye(len(ativos)) - np.asarray(matriz_dependencias, dtype=float)
@@ -216,8 +237,9 @@ def _diagnosticar(sistema):
         "posto": posto,
         "determinante": determinante,
         "condicao": condicao,
-        "invertivel": posto == n and condicao < LIMITE_CONDICAO_SINGULAR,
-        "frágil": condicao > LIMITE_CONDICAO_ALERTA,
+        # bool() garante tipos do Python (não numpy.bool_), serializáveis em JSON.
+        "invertivel": bool(posto == n and condicao < LIMITE_CONDICAO_SINGULAR),
+        "frágil": bool(condicao > LIMITE_CONDICAO_ALERTA),
     }
 
 
@@ -257,11 +279,25 @@ def calcular_risco_efetivo(ativos, dependencias):
     except np.linalg.LinAlgError as erro:
         raise ValueError("Não foi possível resolver o sistema de risco.") from erro
 
+    # Conferência (S3_10): substitui x de volta em (I - A)x e compara com b,
+    # com tolerância (allclose), nunca com ==.
+    if not np.allclose(
+        sistema @ riscos_efetivos,
+        np.asarray(riscos_proprios, dtype=float),
+        rtol=1e-9,
+        atol=1e-9,
+    ):
+        raise ValueError(
+            "A solução não satisfaz (I - A)x = b dentro da tolerância; "
+            "o resultado não é confiável."
+        )
+
     return [
         {
             "id": ativo.id,
             "nome": ativo.nome,
             "risco_proprio": float(riscos_proprios[indice]),
+            "fator_exposicao": float(ativo.obter_fator_exposicao()),
             "risco_efetivo": float(riscos_efetivos[indice]),
         }
         for indice, ativo in enumerate(ativos)
