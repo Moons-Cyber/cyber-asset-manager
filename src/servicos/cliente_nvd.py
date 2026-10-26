@@ -15,6 +15,7 @@ URL_NVD = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 INTERVALO_SEM_CHAVE = 6.1
 INTERVALO_COM_CHAVE = 0.7
 
+# Ordem de preferência das versões do CVSS. Usamos sempre a mais recente
 # disponível entre as v3.x para manter as notas comparáveis entre CVEs.
 VERSOES_CVSS = ("cvssMetricV31", "cvssMetricV30", "cvssMetricV40", "cvssMetricV2")
 

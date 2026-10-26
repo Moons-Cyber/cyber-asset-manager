@@ -49,10 +49,11 @@ class Severidade(Enum):
 
 
 class StatusVulnerabilidade(Enum):
-    """Situação de tratamento da vulnerabilidade."""
+    """Situação de tratamento da vulnerabilidade.
 
-    
-    
+    Os valores são exatamente os textos que já existem no seu ativos.json,
+    então os dados antigos continuam carregando sem migração.
+    """
 
     ABERTA = "Aberta"
     EM_TRATAMENTO = "Em tratamento"
