@@ -1,0 +1,29 @@
+services:
+  inventario:
+    build: .
+    # Os três valores abaixo podem ser trocados num arquivo .env (sem editar
+    # este arquivo). Num servidor compartilhado por vários alunos, nome de
+    # container e porta fixos colidem com os de outra pessoa.
+    image: inventario-ativos:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-inventario-ativos}
+    ports:
+      - "${HOST_PORT:-5000}:5000"
+    environment:
+      DADOS_DIR: /dados
+      # Opcional: chave gratuita do NVD (consultas mais rápidas). Se a variável
+      # não existir no seu terminal, fica vazia e o programa ignora.
+      NVD_API_KEY: ${NVD_API_KEY:-}
+    volumes:
+      - dados:/dados
+    # Sobe sozinho se o processo cair ou se a máquina reiniciar, a menos que
+    # alguém tenha parado o container de propósito.
+    restart: unless-stopped
+    # Sem limite, o log do Docker cresce sem parar; em 24 h+ isso importa.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  dados:

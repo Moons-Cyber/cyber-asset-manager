@@ -1,0 +1,27 @@
+# Controle de versão e ambientes locais
+.env
+.git
+.gitignore
+.vscode
+.venv
+venv
+**/__pycache__
+**/*.pyc
+
+# Dados: pertencem ao volume, NUNCA à imagem
+ativos.json
+dependencias.json
+cache_cve.json
+**/*.tmp
+
+# Não são necessários para rodar o serviço
+testes
+main.py
+*.md
+scripts
+monitoramento*.csv
+empacotar_projeto.py
+src/algoritimos
+Dockerfile
+docker-compose.yml
+.dockerignore
