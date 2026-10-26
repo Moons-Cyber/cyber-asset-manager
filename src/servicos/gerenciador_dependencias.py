@@ -1,9 +1,11 @@
 """Gerencia as dependências entre ativos."""
 
 import json
+import math
 from pathlib import Path
 
-from src.modelos.dependencia import Dependencia
+from src.modelos.dependencia import Dependencia, soma_de_pesos_valida
+from src.persistencia.erros import ErroDados
 
 
 class GerenciadorDependencias:
@@ -28,8 +30,9 @@ class GerenciadorDependencias:
                 Dependencia(**dado)
                 for dado in dados
             ]
-        except (json.JSONDecodeError, TypeError) as erro:
-            raise ValueError(
+        except (ValueError, TypeError) as erro:
+            # ValueError cobre JSON inválido e também um peso inválido gravado.
+            raise ErroDados(
                 f"Arquivo '{self.caminho_arquivo}' inválido: {erro}"
             ) from erro
 
@@ -74,16 +77,18 @@ class GerenciadorDependencias:
                     "Essa dependência já está cadastrada."
                 )
 
-        peso_recebido = sum(
-            existente.peso
-            for existente in dependencias
-            if existente.ativo_destino_id
-            == dependencia.ativo_destino_id
+        # fsum: soma exata, independente da ordem das parcelas.
+        novo_total = math.fsum(
+            [
+                existente.peso
+                for existente in dependencias
+                if existente.ativo_destino_id
+                == dependencia.ativo_destino_id
+            ]
+            + [dependencia.peso]
         )
 
-        novo_total = peso_recebido + dependencia.peso
-
-        if novo_total >= 1:
+        if not soma_de_pesos_valida(novo_total):
             raise ValueError(
                 "A soma dos pesos recebidos pelo ativo "
                 "deve ser menor que 1."
