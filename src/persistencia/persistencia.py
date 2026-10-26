@@ -7,6 +7,7 @@ from src.modelos.notebook import Notebook
 from src.modelos.roteador import Roteador
 from src.modelos.servidor import Servidor
 from src.modelos.vulnerabilidades import Vulnerabilidade
+from src.persistencia.erros import ErroDados
 
 
 class Persistencia:
@@ -47,16 +48,16 @@ class Persistencia:
             with open(nome_arquivo, "r", encoding="utf-8") as arquivo:
                 dados = json.load(arquivo)
         except json.JSONDecodeError as erro:
-            raise ValueError(f"Arquivo '{nome_arquivo}' com JSON inválido: {erro}") from erro
+            raise ErroDados(f"Arquivo '{nome_arquivo}' com JSON inválido: {erro}") from erro
 
         if not isinstance(dados, list):
-            raise ValueError("O arquivo de ativos deve conter uma lista JSON.")
+            raise ErroDados("O arquivo de ativos deve conter uma lista JSON.")
 
         ativos = []
         for dado in dados:
             tipo = dado.get("tipo") if isinstance(dado, dict) else None
             if tipo not in self.TIPOS:
-                raise ValueError(f"Tipo de ativo desconhecido no arquivo: {tipo!r}")
+                raise ErroDados(f"Tipo de ativo desconhecido no arquivo: {tipo!r}")
 
             try:
                 dados_ativo = dado.copy()
@@ -66,7 +67,7 @@ class Persistencia:
                 ]
                 ativos.append(self.TIPOS[tipo](**dados_ativo))
             except (KeyError, TypeError) as erro:
-                raise ValueError(
+                raise ErroDados(
                     f"Registro de ativo inválido (campo ausente ou inesperado: {erro})."
                 ) from erro
         return ativos
