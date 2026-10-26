@@ -5,3 +5,4 @@ venv/
 cache_cve.json
 .env
 monitoramento*.csv
+dependencias.json
