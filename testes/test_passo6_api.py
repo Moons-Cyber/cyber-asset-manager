@@ -56,9 +56,11 @@ class TesteGeral(Base):
 
     def test_saude_devolve_503_se_dados_corrompidos(self):
         (Path(self.tmp.name) / "ativos.json").write_text("{ quebrado", encoding="utf-8")
-        r = self.c.get("/api/saude")
+        with self.assertLogs(self.app.logger, level="ERROR"):
+            r = self.c.get("/api/saude")
         self.assertEqual(r.status_code, 503)
         self.assertEqual(r.json["status"], "erro")
+        self.assertNotIn(self.tmp.name, r.get_data(as_text=True))   # sem caminho do servidor
 
     def test_tipos_listam_os_quatro(self):
         r = self.c.get("/api/tipos").json
@@ -394,6 +396,70 @@ class TesteConcorrenciaEPersistencia(Base):
         nova = Path(self.tmp.name) / "volume" / "dados"
         criar_app(nova)
         self.assertTrue(nova.is_dir())
+
+
+
+class TesteDadosCorrompidos(Base):
+    """Arquivo ruim é falha do SERVIDOR (503), nunca do cliente (400)."""
+
+    def escrever(self, nome, conteudo):
+        (Path(self.tmp.name) / nome).write_text(conteudo, encoding="utf-8")
+
+    def requisitar(self, metodo, url, **kw):
+        with self.assertLogs(self.app.logger, level="ERROR"):
+            return getattr(self.c, metodo)(url, **kw)
+
+    def test_ativos_corrompidos_dao_503_em_leitura_escrita_e_risco(self):
+        self.escrever("ativos.json", "{ quebrado")
+        corpo = {"id": 1, "tipo": 1, "nome": "x", "responsavel": "y", "setor": "z", "memoria_ram": "8GB"}
+        for metodo, url, kw in (("get", "/api/ativos", {}), ("get", "/api/ativos/1", {}),
+                                ("get", "/api/risco", {}), ("post", "/api/ativos", {"json": corpo})):
+            with self.subTest(metodo=metodo, url=url):
+                r = self.requisitar(metodo, url, **kw)
+                self.assertEqual(r.status_code, 503)
+                self.assertNotIn(self.tmp.name, r.get_data(as_text=True))   # não vaza caminho
+
+    def test_cada_tipo_de_corrupcao_vira_503(self):
+        ruim = {"id": 1, "tipo": "Notebook", "nome": "n", "responsavel": "r", "setor": "s",
+                "vulnerabilidades": [], "memoria_ram": "8GB"}
+        casos = {
+            "id repetido": json.dumps([ruim, ruim]),
+            "tipo desconhecido": json.dumps([{**ruim, "tipo": "Impressora"}]),
+            "campo ausente": json.dumps([{k: v for k, v in ruim.items() if k != "responsavel"}]),
+            "não é lista": json.dumps({"a": 1}),
+        }
+        for nome, conteudo in casos.items():
+            with self.subTest(caso=nome):
+                self.escrever("ativos.json", conteudo)
+                criar = criar_app(self.tmp.name, cliente_nvd=self.nvd).test_client()
+                with self.assertLogs("src.api.aplicacao", level="ERROR"):
+                    r = criar.get("/api/ativos")
+                self.assertEqual(r.status_code, 503)
+
+    def test_dependencias_corrompidas_dao_503(self):
+        for conteudo in ("{ quebrado", json.dumps([{"ativo_origem_id": 1, "ativo_destino_id": 2, "peso": 1.5}]),
+                         json.dumps([{"formato": "errado"}])):
+            with self.subTest(conteudo=conteudo[:30]):
+                self.escrever("dependencias.json", conteudo)
+                app = criar_app(self.tmp.name, cliente_nvd=self.nvd)
+                with self.assertLogs(app.logger, level="ERROR"):
+                    r = app.test_client().get("/api/dependencias")
+                self.assertEqual(r.status_code, 503)
+
+    def test_servico_se_recupera_quando_o_arquivo_e_corrigido(self):
+        self.escrever("ativos.json", "{ quebrado")
+        self.assertEqual(self.requisitar("get", "/api/ativos").status_code, 503)
+        self.escrever("ativos.json", "[]")
+        self.assertEqual(self.c.get("/api/ativos").status_code, 200)
+        self.assertEqual(self.c.get("/api/saude").status_code, 200)
+
+    def test_entrada_invalida_do_cliente_continua_400(self):
+        r = self.ativo(1, id="texto")
+        self.assertEqual(r.status_code, 400)
+
+    def test_erro_de_dados_continua_sendo_valueerror_para_o_menu(self):
+        from src.persistencia.erros import ErroDados
+        self.assertTrue(issubclass(ErroDados, ValueError))
 
 
 if __name__ == "__main__":

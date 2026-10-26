@@ -20,6 +20,7 @@ from src.modelos.vulnerabilidades import (
     normalizar_cve,
     resumir,
 )
+from src.persistencia.erros import ErroDados
 from src.servicos.analise_risco import (
     calcular_risco_efetivo,
     diagnosticar_sistema,
@@ -248,6 +249,16 @@ def criar_app(pasta_dados=".", cliente_nvd=None):
     def tratar_erro_api(erro):
         return jsonify({"erro": erro.mensagem, **erro.extras}), erro.status
 
+    @app.errorhandler(ErroDados)
+    def tratar_dados_invalidos(erro):
+        # O Flask escolhe o handler mais específico: este vem antes do de
+        # ValueError. O detalhe (com caminho de arquivo) vai só para o log.
+        app.logger.error("Dados armazenados inválidos: %s", erro)
+        return jsonify({
+            "erro": "Os dados armazenados estão ilegíveis ou inconsistentes. "
+                    "Consulte o log do servidor."
+        }), 503
+
     @app.errorhandler(ValueError)
     def tratar_valor_invalido(erro):
         # Regras de domínio (ex.: nota fora de 0-10, peso inválido).
@@ -285,7 +296,11 @@ def criar_app(pasta_dados=".", cliente_nvd=None):
                 total = len(gerenciador.listar_ativos())
                 gerenciador_dependencias.listar_dependencias()
         except (ValueError, OSError) as erro:
-            return jsonify({"status": "erro", "detalhe": str(erro)}), 503
+            app.logger.error("Falha na verificação de saúde: %s", erro)
+            return jsonify({
+                "status": "erro",
+                "detalhe": "Dados ilegíveis; consulte o log do servidor.",
+            }), 503
 
         return jsonify({"status": "ok", "ativos": total})
 

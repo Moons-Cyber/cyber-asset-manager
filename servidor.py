@@ -1,3 +1,15 @@
+"""Ponto de entrada da API.
+
+Desenvolvimento:   python servidor.py
+Produção (Docker): gunicorn servidor:app   (configurado no passo do Docker)
+
+Configuração por variáveis de ambiente:
+    DADOS_DIR  pasta onde ficam ativos.json, dependencias.json e cache_cve.json
+               (padrão: pasta atual; no Docker, aponte para o volume)
+    HOST       endereço de escuta (padrão 127.0.0.1; no Docker use 0.0.0.0)
+    PORT       porta (padrão 5000)
+    NVD_API_KEY (opcional) chave gratuita do NVD, para consultas mais rápidas
+"""
 
 import os
 
