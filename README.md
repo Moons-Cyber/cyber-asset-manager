@@ -194,10 +194,8 @@ Agora basta abrir no navegador `http://localhost:5000/api/risco` para ver o cál
 O projeto possui uma pasta `testes` para garantir que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los localmente (com o `.venv` ativado):
 
 ```bash
-pytest
+python -m unittest discover -s testes
 ```
-*(Ou `python -m unittest discover -s testes`, dependendo do executor utilizado no ambiente).*
-
 ---
 
 ## 📂 Estrutura de Pastas do Projeto
