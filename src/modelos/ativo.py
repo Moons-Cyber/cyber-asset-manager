@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 
 
 class Ativo(ABC):
+    # Cada subclasse declara o seu campo próprio (ex.: memoria_ram) e o rótulo
+    # exibido ao usuário. Menu e gerenciador consultam estes atributos, em vez
+    # de manter dicionários paralelos "tipo -> campo" espalhados pelo código.
     campo_especifico = None
     rotulo_campo = None
 
@@ -40,4 +43,13 @@ class Ativo(ABC):
 
     @abstractmethod
     def obter_tipo(self):
+        pass
+
+    @abstractmethod
+    def obter_fator_exposicao(self):
+        """Fator que pondera o risco próprio deste tipo de ativo.
+
+        1.0 é a exposição de referência; acima de 1.0, mais exposto à rede.
+        Cada subclasse define o seu (polimorfismo).
+        """
         pass

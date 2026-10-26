@@ -20,3 +20,6 @@ class Servidor(Ativo):
         data = super().para_dict()
         data["processador"] = self.processador
         return data
+
+    def obter_fator_exposicao(self):
+        return 1.5  # serviços publicados na rede

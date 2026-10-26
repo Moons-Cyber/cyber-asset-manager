@@ -20,3 +20,6 @@ class Notebook(Ativo):
         data = super().para_dict()
         data["memoria_ram"] = self.memoria_ram
         return data
+
+    def obter_fator_exposicao(self):
+        return 1.0  # referência: usuário final, atrás da rede interna
