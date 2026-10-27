@@ -7,8 +7,7 @@ services:
     image: inventario-ativos:${IMAGE_TAG:-latest}
     container_name: ${CONTAINER_NAME:-inventario-ativos}
     ports:
-      - ports:
-  - "127.0.0.1:${HOST_PORT:-5000}:5000"
+      - "127.0.0.1:${HOST_PORT:-5000}:5000"
     environment:
       DADOS_DIR: /dados
       # Opcional: chave gratuita do NVD (consultas mais rápidas). Se a variável
