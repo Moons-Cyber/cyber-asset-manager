@@ -49,15 +49,30 @@ def ler_inteiro(mensagem, minimo=None):
             print("Entrada inválida. Digite um número inteiro.")
 
 
-def ler_texto(mensagem):
-    """Solicita um texto não vazio."""
+def ler_texto(mensagem, minimo=1):
+    """Solicita um texto com quantidade mínima de caracteres."""
     while True:
         valor = input(mensagem).strip()
 
-        if valor:
+        if len(valor) >= minimo:
             return valor
 
-        print("Este campo não pode ficar vazio.")
+        print(f"Este campo deve ter pelo menos {minimo} caracteres.")
+
+
+def ler_memoria_ram(mensagem):
+    """Solicita uma capacidade de memória positiva em MB ou GB."""
+    while True:
+        valor = input(mensagem).strip().upper().replace(" ", "")
+
+        for unidade in ("GB", "MB"):
+            if valor.endswith(unidade):
+                quantidade = valor[:-len(unidade)]
+                if quantidade.isdigit() and int(quantidade) > 0:
+                    return valor
+                break
+
+        print("Memória RAM inválida. Use uma quantidade positiva, como 8GB, 16GB ou 512MB.")
 
 
 def ler_nota():
@@ -234,10 +249,15 @@ def cadastrar_ativo(gerenciador, cliente_nvd):
     classe, texto_detalhe = TIPOS_DISPONIVEIS[tipo]
 
     identificador = ler_inteiro("ID: ", minimo=1)
-    nome = ler_texto("Nome: ")
-    responsavel = ler_texto("Responsável: ")
-    setor = ler_texto("Setor: ")
-    detalhe = ler_texto(texto_detalhe)
+    nome = ler_texto("Nome: ", minimo=3)
+    responsavel = ler_texto("Responsável: ", minimo=2)
+    setor = ler_texto("Setor: ", minimo=2)
+
+    if tipo == TipoAtivo.NOTEBOOK:
+        detalhe = ler_memoria_ram(texto_detalhe)
+    else:
+        detalhe = ler_texto(texto_detalhe)
+
     vulnerabilidades = cadastrar_vulnerabilidades(cliente_nvd)
 
     ativo = classe(

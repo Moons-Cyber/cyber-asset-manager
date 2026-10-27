@@ -102,13 +102,18 @@ class TesteGeral(Base):
 
 class TesteAtivos(Base):
     def test_cria_cada_tipo_e_devolve_201_com_location(self):
-        campos = {1: "memoria_ram", 2: "processador", 3: "modelo", 4: "sgbd"}
-        for codigo, campo in campos.items():
+        campos = {
+            1: ("memoria_ram", "16GB"),
+            2: ("processador", "Intel Xeon"),
+            3: ("modelo", "TP-Link Archer C6"),
+            4: ("sgbd", "PostgreSQL 16"),
+        }
+        for codigo, (campo, valor) in campos.items():
             r = self.c.post("/api/ativos", json={
                 "id": codigo, "tipo": codigo, "nome": f"N{codigo}",
-                "responsavel": "Ana", "setor": "TI", campo: "valor"})
+                "responsavel": "Ana", "setor": "TI", campo: valor})
             self.assertEqual(r.status_code, 201, r.json)
-            self.assertEqual(r.json["valor_campo"], "valor")
+            self.assertEqual(r.json["valor_campo"], valor)
             self.assertEqual(r.json["campo_especifico"], campo)
             self.assertTrue(r.headers["Location"].endswith(f"/api/ativos/{codigo}"))
         self.assertEqual(len(self.c.get("/api/ativos").json), 4)

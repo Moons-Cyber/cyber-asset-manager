@@ -1,4 +1,5 @@
 from src.modelos.ativo import Ativo
+from src.modelos.validacoes import validar_texto_identificacao
 
 
 class BancoDeDados(Ativo):
@@ -7,7 +8,7 @@ class BancoDeDados(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, sgbd):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.sgbd = sgbd
+        self.sgbd = validar_texto_identificacao(sgbd, "SGBD")
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()

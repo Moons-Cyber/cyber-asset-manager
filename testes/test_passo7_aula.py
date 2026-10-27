@@ -36,9 +36,19 @@ def vuln(i, nota):
 
 def ativos_da_aula():
     """Slide 'O cenário que vamos usar': V1=9,8 (Web); V2=5,3 (Web e BD); V3=7,5 (App)."""
-    return [Notebook(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "-"),
-            Notebook(2, "App", "x", "TI", [vuln(3, 7.5)], "-"),
-            Notebook(3, "BD", "x", "TI", [vuln(2, 5.3)], "-")]
+    return [Notebook(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "16GB"),
+            Notebook(2, "App", "x", "TI", [vuln(3, 7.5)], "16GB"),
+            Notebook(3, "BD", "x", "TI", [vuln(2, 5.3)], "16GB")]
+
+
+def detalhe_valido(classe):
+    """Devolve um campo específico válido para cada tipo de ativo."""
+    return {
+        Notebook: "16GB",
+        Servidor: "Intel Xeon",
+        Roteador: "TP-Link Archer C6",
+        BancoDeDados: "PostgreSQL 16",
+    }[classe]
 
 
 def dependencias_da_aula():
@@ -100,7 +110,7 @@ class TesteQuandoOModeloQuebra(unittest.TestCase):
     def test_cadastro_recusa_a_dependencia_que_leva_a_soma_a_1(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "-") for i in (1, 2, 3)]
+            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3)]
             g.cadastrar_dependencia(Dependencia(2, 1, 0.5), ativos)
             with self.assertRaises(ValueError):
                 g.cadastrar_dependencia(Dependencia(3, 1, 0.5), ativos)
@@ -128,14 +138,14 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
         for ordem in ((0.7, 0.2, 0.1), (0.1, 0.2, 0.7), (0.2, 0.7, 0.1), (0.1, 0.7, 0.2)):
             with self.subTest(ordem=ordem), tempfile.TemporaryDirectory() as t:
                 g = GerenciadorDependencias(Path(t) / "d.json")
-                ativos = [Notebook(i, f"A{i}", "x", "TI", [], "-") for i in (1, 2, 3, 4)]
+                ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
                 for origem, peso in zip((2, 3), ordem[:2]):
                     g.cadastrar_dependencia(Dependencia(origem, 1, peso), ativos)
                 with self.assertRaises(ValueError):
                     g.cadastrar_dependencia(Dependencia(4, 1, ordem[2]), ativos)
 
     def test_montagem_de_A_tambem_recusa_arquivo_editado_a_mao(self):
-        ativos = [Notebook(i, f"A{i}", "x", "TI", [], "-") for i in (1, 2, 3, 4)]
+        ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
         deps = [Dependencia(2, 1, 0.7), Dependencia(3, 1, 0.2), Dependencia(4, 1, 0.1)]
         with self.assertRaises(ValueError):
             construir_matriz_dependencias(ativos, deps)
@@ -143,7 +153,7 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
     def test_cadastro_e_montagem_concordam(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [vuln(i, 5.0)], "-") for i in (1, 2, 3, 4)]
+            ativos = [Notebook(i, f"A{i}", "x", "TI", [vuln(i, 5.0)], "16GB") for i in (1, 2, 3, 4)]
             for destino in (1, 2, 3, 4):
                 outros = [i for i in (1, 2, 3, 4) if i != destino]
                 for origem, peso in zip(outros, (0.7, 0.2, 0.1)):
@@ -158,7 +168,7 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
     def test_pesos_altos_mas_validos_continuam_aceitos(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "-") for i in (1, 2)]
+            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2)]
             g.cadastrar_dependencia(Dependencia(2, 1, 0.999), ativos)
             self.assertEqual(len(g.listar_dependencias()), 1)
 
@@ -220,7 +230,10 @@ class TesteFatorDeExposicao(unittest.TestCase):
         esperado = {Notebook: 1.0, Servidor: 1.5, Roteador: 1.2, BancoDeDados: 1.0}
         for classe, fator in esperado.items():
             with self.subTest(tipo=classe.__name__):
-                self.assertEqual(classe(1, "n", "r", "s", [], "x").obter_fator_exposicao(), fator)
+                self.assertEqual(
+                    classe(1, "n", "r", "s", [], detalhe_valido(classe)).obter_fator_exposicao(),
+                    fator,
+                )
 
     def test_tipo_sem_fator_nao_pode_ser_criado(self):
         class SemFator(Ativo):
@@ -230,14 +243,15 @@ class TesteFatorDeExposicao(unittest.TestCase):
             SemFator(1, "n", "r", "s", [])
 
     def test_matriz_F_e_diagonal_na_ordem_dos_ativos(self):
-        ativos = [Servidor(1, "a", "r", "s", [], "x"), Notebook(2, "b", "r", "s", [], "x"),
-                  Roteador(3, "c", "r", "s", [], "x")]
+        ativos = [Servidor(1, "a", "r", "s", [], "Intel Xeon"),
+                  Notebook(2, "b", "r", "s", [], "16GB"),
+                  Roteador(3, "c", "r", "s", [], "TP-Link Archer C6")]
         np.testing.assert_array_equal(construir_matriz_exposicao(ativos), np.diag([1.5, 1.0, 1.2]))
 
     def test_exemplo_do_slide_F_igual_a_diag_1_5_1_1(self):
         # Web = Servidor (1,5); App e BD com fator 1,0. Slide: F @ M @ v = [22,65  7,5  5,3]
         ativos = ativos_da_aula()
-        ativos[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "-")
+        ativos[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "Intel Xeon")
         r = calcular_risco_efetivo(ativos, dependencias_da_aula())
         for obtido, esperado in zip((x["risco_proprio"] for x in r), (22.65, 7.5, 5.3)):
             self.assertAlmostEqual(obtido, esperado, places=9)
@@ -246,7 +260,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
     def test_risco_efetivo_com_F_conta_a_mao(self):
         # x_W = 22,65 + 0,2 x_A ; x_A = 7,5 + 0,5 x_W  =>  0,9 x_A = 18,825
         ativos = ativos_da_aula()
-        ativos[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "-")
+        ativos[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "Intel Xeon")
         r = calcular_risco_efetivo(ativos, dependencias_da_aula())
         xa = 18.825 / 0.9
         for obtido, esperado in zip((x["risco_efetivo"] for x in r),
@@ -256,7 +270,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
     def test_F_multiplica_so_o_risco_proprio_e_nao_muda_a_invertibilidade(self):
         # F entra em b, não em A: determinante e número de condição de I - A não mudam.
         com_servidor = ativos_da_aula()
-        com_servidor[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "-")
+        com_servidor[0] = Servidor(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "Intel Xeon")
         d1 = diagnosticar_sistema(ativos_da_aula(), dependencias_da_aula())
         d2 = diagnosticar_sistema(com_servidor, dependencias_da_aula())
         self.assertEqual((d1["determinante"], d1["condicao"]), (d2["determinante"], d2["condicao"]))
@@ -264,7 +278,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
     def test_risco_proprio_e_a_soma_das_notas_vezes_o_fator_em_todos_os_tipos(self):
         for classe in (Notebook, Servidor, Roteador, BancoDeDados):
             with self.subTest(tipo=classe.__name__):
-                ativo = classe(1, "n", "r", "s", [vuln(1, 4.0), vuln(2, 4.0)], "x")
+                ativo = classe(1, "n", "r", "s", [vuln(1, 4.0), vuln(2, 4.0)], detalhe_valido(classe))
                 r = calcular_risco_efetivo([ativo], [])[0]
                 self.assertAlmostEqual(r["risco_proprio"], 8.0 * ativo.obter_fator_exposicao())
 
@@ -274,7 +288,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             ga = GerenciadorAtivos(Path(t) / "a.json")
             gd = GerenciadorDependencias(Path(t) / "d.json")
-            ga.cadastrar_ativo(Servidor(1, "Web", "x", "TI", [vuln(1, 8.0)], "-"))
+            ga.cadastrar_ativo(Servidor(1, "Web", "x", "TI", [vuln(1, 8.0)], "Intel Xeon"))
             with contextlib.redirect_stdout(io.StringIO()) as saida:
                 main.analisar_risco(ga, gd)
         self.assertIn("Risco próprio: 12.00 (fator de exposição 1.5)", saida.getvalue())

@@ -21,6 +21,12 @@ from src.servicos.consultas import filtrar_por_tipo
 from src.servicos.gerenciador_ativos import GerenciadorAtivos
 
 CLASSES = (Notebook, Servidor, Roteador, BancoDeDados)
+DETALHES_VALIDOS = {
+    Notebook: "16GB",
+    Servidor: "Intel Xeon",
+    Roteador: "TP-Link Archer C6",
+    BancoDeDados: "PostgreSQL 16",
+}
 
 
 def banco(id_=10, nome="DB Clientes", sgbd="PostgreSQL", nota=None):
@@ -65,13 +71,14 @@ class TesteContratoDosTipos(unittest.TestCase):
             with self.subTest(cls=cls.__name__):
                 self.assertTrue(cls.campo_especifico and cls.rotulo_campo)
                 self.assertIn(cls.campo_especifico, inspect.signature(cls.__init__).parameters)
-                obj = cls(1, "n", "r", "s", [], "valor")
-                self.assertEqual(getattr(obj, cls.campo_especifico), "valor")
+                detalhe = DETALHES_VALIDOS[cls]
+                obj = cls(1, "n", "r", "s", [], detalhe)
+                self.assertEqual(getattr(obj, cls.campo_especifico), detalhe)
 
     def test_nome_do_tipo_gravado_e_reconhecido_na_leitura(self):
         for cls in CLASSES:
             with self.subTest(cls=cls.__name__):
-                obj = cls(1, "n", "r", "s", [], "valor")
+                obj = cls(1, "n", "r", "s", [], DETALHES_VALIDOS[cls])
                 self.assertIs(Persistencia.TIPOS[obj.obter_tipo()], cls)
 
     def test_todo_tipo_do_enum_tem_classe_e_rotulo(self):
@@ -144,7 +151,7 @@ class TesteMenu(unittest.TestCase):
         for cls, rotulo in esperado.items():
             with self.subTest(cls=cls.__name__), tempfile.TemporaryDirectory() as t:
                 g = GerenciadorAtivos(Path(t) / "a.json")
-                g.cadastrar_ativo(cls(1, "X", "r", "s", [], "v"))
+                g.cadastrar_ativo(cls(1, "X", "r", "s", [], DETALHES_VALIDOS[cls]))
                 saida = self._executar(main.atualizar_ativo, ["1", "0"], g, None)
                 self.assertIn(rotulo, saida)
 
