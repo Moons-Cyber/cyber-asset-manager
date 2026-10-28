@@ -6,6 +6,7 @@ from pathlib import Path
 
 from src.modelos.dependencia import Dependencia, soma_de_pesos_valida
 from src.persistencia.erros import ErroDados
+from src.persistencia.persistencia import gravar_json_atomico
 
 
 class GerenciadorDependencias:
@@ -37,22 +38,13 @@ class GerenciadorDependencias:
             ) from erro
 
     def salvar_dependencias(self, dependencias):
-        """Salva a lista de dependências em formato JSON."""
+        """Salva a lista de dependências em formato JSON (gravação atômica)."""
         dados = [
             dependencia.para_dict()
             for dependencia in dependencias
         ]
 
-        with self.caminho_arquivo.open(
-            "w",
-            encoding="utf-8",
-        ) as arquivo:
-            json.dump(
-                dados,
-                arquivo,
-                indent=4,
-                ensure_ascii=False,
-            )
+        gravar_json_atomico(dados, self.caminho_arquivo)
 
     def cadastrar_dependencia(self, dependencia, ativos):
         """Cadastra uma dependência após validar sua consistência."""
@@ -136,5 +128,29 @@ class GerenciadorDependencias:
 
         if removidas:
             self.salvar_dependencias(restantes)
+
+        return removidas
+
+    def remover_ativo_com_dependencias(self, gerenciador_ativos, identificador):
+        """Remove um ativo junto com as dependências ligadas a ele.
+
+        As dependências saem PRIMEIRO: se a remoção do ativo falhar depois,
+        elas são regravadas, e nunca sobra dependência órfã apontando para
+        um ativo que já não existe (o que quebraria a análise de risco).
+        Devolve quantas dependências foram removidas, ou None se o ativo
+        não existir.
+        """
+        if gerenciador_ativos.buscar_ativo_por_id(identificador) is None:
+            return None
+
+        anteriores = self.listar_dependencias()
+        removidas = self.remover_dependencias_do_ativo(identificador)
+
+        try:
+            gerenciador_ativos.remover_ativo(identificador)
+        except Exception:
+            if removidas:
+                self.salvar_dependencias(anteriores)
+            raise
 
         return removidas

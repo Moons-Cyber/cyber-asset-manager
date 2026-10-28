@@ -9,6 +9,8 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.persistencia.persistencia import gravar_json_atomico
+
 URL_NVD = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
 # Limites do NVD: 5 requisições/30s sem chave; 50/30s com chave gratuita.
@@ -63,13 +65,31 @@ class ClienteNVD:
             return {}
         try:
             with self.arquivo_cache.open("r", encoding="utf-8") as f:
-                return json.load(f)
+                cache = json.load(f)
         except (json.JSONDecodeError, OSError):
             return {}  # cache corrompido não pode derrubar o programa
 
+        return cache if isinstance(cache, dict) else {}
+
     def _salvar_cache(self):
-        with self.arquivo_cache.open("w", encoding="utf-8") as f:
-            json.dump(self._cache, f, indent=4, ensure_ascii=False)
+        gravar_json_atomico(self._cache, self.arquivo_cache)
+
+    def _ler_do_cache(self, cve_id):
+        """DadosCVE guardado, ou None se ausente ou malformado.
+
+        Uma entrada malformada é descartada: a consulta segue para o NVD,
+        em vez de virar erro 500.
+        """
+        entrada = self._cache.get(cve_id)
+
+        if entrada is None:
+            return None
+
+        try:
+            return DadosCVE(**entrada)
+        except TypeError:
+            del self._cache[cve_id]
+            return None
 
     # ---------- limite de taxa ----------
     def _respeitar_limite(self):
@@ -82,8 +102,9 @@ class ClienteNVD:
     # ---------- consulta ----------
     def consultar(self, cve_id):
         """Devolve DadosCVE do cache ou do NVD."""
-        if cve_id in self._cache:
-            return DadosCVE(**self._cache[cve_id])
+        guardado = self._ler_do_cache(cve_id)
+        if guardado is not None:
+            return guardado
 
         self._respeitar_limite()
         url = f"{URL_NVD}?{urllib.parse.urlencode({'cveId': cve_id})}"

@@ -419,9 +419,8 @@ def criar_app(pasta_dados=".", cliente_nvd=None):
     @com_trava
     def remover_ativo(identificador):
         ativo_ou_404(identificador)
-        gerenciador.remover_ativo(identificador)
-        removidas = gerenciador_dependencias.remover_dependencias_do_ativo(
-            identificador
+        removidas = gerenciador_dependencias.remover_ativo_com_dependencias(
+            gerenciador, identificador
         )
         return jsonify({"removido": identificador, "dependencias_removidas": removidas})
 
@@ -466,6 +465,8 @@ def criar_app(pasta_dados=".", cliente_nvd=None):
             raise ErroApi("Só é possível alterar o campo 'status'.")
 
         novo_status = _status(corpo["status"])
+        # CVEs são gravados em maiúsculas; IDs LOCAL-... ficam como vieram.
+        id_vulnerabilidade = normalizar_cve(id_vulnerabilidade) or id_vulnerabilidade
         alvo = next(
             (v for v in ativo.vulnerabilidades if v.id == id_vulnerabilidade), None
         )

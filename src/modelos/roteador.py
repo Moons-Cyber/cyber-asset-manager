@@ -8,7 +8,11 @@ class Roteador(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, modelo):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.modelo = validar_texto_identificacao(modelo, "Modelo")
+        self.modelo = self.validar_campo_especifico(modelo)
+
+    @staticmethod
+    def validar_campo_especifico(valor):
+        return validar_texto_identificacao(valor, "Modelo")
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()

@@ -41,6 +41,16 @@ class Ativo(ABC):
             ]
         }
 
+    @staticmethod
+    @abstractmethod
+    def validar_campo_especifico(valor):
+        """Valida e normaliza o valor do campo próprio do tipo.
+
+        Usado no construtor E na atualização: sem isso, uma alteração
+        gravaria um valor que o construtor recusa, e o arquivo deixaria
+        de carregar na próxima leitura.
+        """
+
     @abstractmethod
     def obter_tipo(self):
         pass

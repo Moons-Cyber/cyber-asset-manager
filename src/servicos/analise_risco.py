@@ -1,11 +1,10 @@
+"""Funções para construir o modelo de risco próprio dos ativos."""
+
 import math
 
 import numpy as np
 
-from src.modelos.dependencia import soma_de_pesos_valida 
-
-
-"""Funções para construir o modelo de risco próprio dos ativos."""
+from src.modelos.dependencia import soma_de_pesos_valida
 
 
 def _chave_vulnerabilidade(vulnerabilidade):

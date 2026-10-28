@@ -8,7 +8,7 @@ A partir dessas informações, o programa realiza cálculos matemáticos para di
 
 ## 🚧 Aviso Importante (Status do Projeto)
 
-Este projeto está em desenvolvimento contínuo (branch `feature/api`):
+Este projeto está em desenvolvimento contínuo (a API já está integrada à branch `main`):
 * **Ainda não há Interface Web visual (telas com botões):** No momento, todas as ações são feitas pelo **Menu Interativo no Terminal** (`main.py`) ou através da **API REST em Flask** (`servidor.py` e `aplicacao.py`), que conversa através de textos organizados no formato **JSON**.
 * **Pronto para a futura Interface Web:** A API já conta com rotas de pré-visualização de CVEs (`/api/cve/<cve_id>`) e listagem dinâmica de tipos (`/api/tipos`), preparadas exatamente para alimentar o futuro painel visual.
 
@@ -25,7 +25,6 @@ Se você tiver o [Git](https://git-scm.com/downloads) instalado, copie e cole os
 ```bash
 git clone https://github.com/Moons-Cyber/cyber-asset-manager.git
 cd cyber-asset-manager
-git checkout feature/api
 ```
 *(Se preferir não usar o Git, clique no botão verde **`<> Code`** no topo da página do GitHub, escolha **`Download ZIP`**, extraia a pasta no seu computador e abra o Terminal dentro dela).*
 
@@ -121,16 +120,14 @@ Veja a sequência completa para testar todas as funções do sistema:
 Primeiro, acesse `http://localhost:5000/api/tipos` no navegador. Você verá algo indicando o `codigo` de cada tipo (ex: `1`, `2`, etc.) e o nome do `campo` específico que aquele tipo exige.
 
 #### B) Cadastrar um novo Ativo (`POST /api/ativos`)
-Substitua `CAMPO_DO_TIPO` pelo nome do campo que apareceu em `/api/tipos` para o tipo `1`:
+Cada tipo exige um campo próprio (veja em `/api/tipos`). No exemplo abaixo, o tipo `2` (Servidor) exige o campo `processador`:
 
 ```bash
-curl -X POST http://localhost:5000/api/ativos \
-  -H "Content-Type: application/json" \
-  -d '{"id": 1, "tipo": 1, "nome": "Servidor Principal",
-       "responsavel": "Equipe TI", "setor": "Infraestrutura",
-       "CAMPO_DO_TIPO": "valor_exemplo"}'"
+curl -X POST http://localhost:5000/api/ativos ^
+  -H "Content-Type: application/json" ^
+  -d "{\"id\": 1, \"tipo\": 2, \"nome\": \"Servidor Principal\", \"responsavel\": \"Equipe TI\", \"setor\": \"Infraestrutura\", \"processador\": \"Intel Xeon\"}"
 ```
-*(Nota: No Linux ou Mac, troque o acento circunflexo `^` no fim das linhas por uma barra invertida `\` e use aspas simples por fora do JSON).*
+*(Nota: os exemplos usam a sintaxe do `cmd` do Windows. No Linux ou Mac, troque o `^` no fim das linhas por uma barra invertida `\` e use aspas simples por fora do JSON, sem as barras antes das aspas internas: `-d '{"id": 1, "tipo": 2, ...}'`).*
 
 #### C) Adicionar uma Vulnerabilidade a um Ativo (`POST /api/ativos/<id>/vulnerabilidades`)
 Você pode cadastrar uma vulnerabilidade de duas formas:
@@ -215,16 +212,15 @@ cyber-asset-manager/
 │   │   └── aplicacao.py         # Rotas REST (Flask), validações e integração com serviços
 │   ├── modelos/                 # Classes de Ativo, Vulnerabilidade, Dependência e Enums
 │   ├── persistencia/            # Tratamento de leitura/gravação e erros de arquivos (ErroDados)
-│   ├── servicos/                # Gerenciadores, ClienteNVD e cálculo matemático de risco
-│   └── algoritimos/             # Algoritmos auxiliares de análise do projeto
+│   └── servicos/                # Gerenciadores, ClienteNVD e cálculo matemático de risco
 │
 ├── testes/                      # Testes automatizados do sistema e da API
 ├── scripts/                     # Scripts utilitários de apoio
 │
-├── ativos.json                  # Banco de dados local dos equipamentos cadastrados
-├── dependencias.json            # Banco de dados local das conexões entre equipamentos
-└── cache_cve.json               # Cache das consultas feitas ao NVD para evitar lentidão
+└── ativos.json                  # Banco de dados local dos equipamentos cadastrados
 ```
+
+Os arquivos `dependencias.json` (conexões entre equipamentos) e `cache_cve.json` (cache das consultas ao NVD) são criados pelo próprio programa durante o uso e não fazem parte do repositório (estão no `.gitignore`).
 
 ---
 

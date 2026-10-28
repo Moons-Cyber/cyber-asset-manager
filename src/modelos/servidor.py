@@ -8,7 +8,11 @@ class Servidor(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, processador):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.processador = validar_texto_identificacao(processador, "Processador")
+        self.processador = self.validar_campo_especifico(processador)
+
+    @staticmethod
+    def validar_campo_especifico(valor):
+        return validar_texto_identificacao(valor, "Processador")
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()

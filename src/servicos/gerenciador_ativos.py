@@ -153,6 +153,12 @@ class GerenciadorAtivos:
             ):
                 raise TypeError("A lista deve conter objetos Vulnerabilidade.")
 
+        # Mesma regra do construtor: o valor gravado precisa voltar a carregar.
+        if ativo.campo_especifico in alteracoes:
+            alteracoes[ativo.campo_especifico] = ativo.validar_campo_especifico(
+                alteracoes[ativo.campo_especifico]
+            )
+
         # Toda a validação acima vem ANTES de mexer no objeto.
         for campo, valor in alteracoes.items():
             setattr(ativo, campo, valor)

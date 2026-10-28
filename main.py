@@ -398,13 +398,12 @@ def remover_ativo(gerenciador, gerenciador_dependencias):
         print("Remoção cancelada.")
         return
 
-    if gerenciador.remover_ativo(identificador):
-        removidas = (
-            gerenciador_dependencias.remover_dependencias_do_ativo(
-                identificador
-            )
-        )
+    removidas = gerenciador_dependencias.remover_ativo_com_dependencias(
+        gerenciador,
+        identificador,
+    )
 
+    if removidas is not None:
         print("Ativo removido com sucesso.")
 
         if removidas:
