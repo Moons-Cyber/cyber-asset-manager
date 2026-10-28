@@ -1,4 +1,5 @@
 from src.modelos.ativo import Ativo
+from src.modelos.validacoes import validar_memoria_ram
 
 
 class Notebook(Ativo):
@@ -7,7 +8,7 @@ class Notebook(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, memoria_ram):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.memoria_ram = memoria_ram
+        self.memoria_ram = validar_memoria_ram(memoria_ram)
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()
@@ -20,3 +21,6 @@ class Notebook(Ativo):
         data = super().para_dict()
         data["memoria_ram"] = self.memoria_ram
         return data
+
+    def obter_fator_exposicao(self):
+        return 1.0  # referência: usuário final, atrás da rede interna

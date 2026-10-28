@@ -1,4 +1,5 @@
 from src.modelos.ativo import Ativo
+from src.modelos.validacoes import validar_texto_identificacao
 
 
 class Roteador(Ativo):
@@ -7,7 +8,7 @@ class Roteador(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, modelo):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.modelo = modelo
+        self.modelo = validar_texto_identificacao(modelo, "Modelo")
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()
@@ -20,3 +21,6 @@ class Roteador(Ativo):
         data = super().para_dict()
         data["modelo"] = self.modelo
         return data
+
+    def obter_fator_exposicao(self):
+        return 1.2  # borda da rede, mas com poucas portas de serviço

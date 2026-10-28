@@ -3,6 +3,19 @@
 import math
 
 
+# Margem de tolerância: em ponto flutuante, uma soma que "deveria" dar 1 pode
+# sair 0,9999999999999999, e um teste exato (< 1) a deixaria passar. Uma linha
+# de A que soma 1 torna I - A singular. Por isso a soma precisa ficar a mais de
+# MARGEM_SOMA_PESOS de distância de 1.
+MARGEM_SOMA_PESOS = 1e-9
+LIMITE_SOMA_PESOS = 1.0 - MARGEM_SOMA_PESOS
+
+
+def soma_de_pesos_valida(soma):
+    """True se a soma dos pesos recebidos por um ativo mantém I - A invertível."""
+    return soma < LIMITE_SOMA_PESOS
+
+
 class Dependencia:
     """Representa a transmissão de risco entre dois ativos."""
 

@@ -1,4 +1,5 @@
 from src.modelos.ativo import Ativo
+from src.modelos.validacoes import validar_texto_identificacao
 
 
 class Servidor(Ativo):
@@ -7,7 +8,7 @@ class Servidor(Ativo):
 
     def __init__(self, id, nome, responsavel, setor, vulnerabilidades, processador):
         super().__init__(id, nome, responsavel, setor, vulnerabilidades)
-        self.processador = processador
+        self.processador = validar_texto_identificacao(processador, "Processador")
 
     def exibir_detalhes(self):
         super().exibir_detalhes_comuns()
@@ -20,3 +21,6 @@ class Servidor(Ativo):
         data = super().para_dict()
         data["processador"] = self.processador
         return data
+
+    def obter_fator_exposicao(self):
+        return 1.5  # serviços publicados na rede

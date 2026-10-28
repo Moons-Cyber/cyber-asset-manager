@@ -1,16 +1,28 @@
-"""Serviço responsável pelo gerenciamento dos ativos."""
+"""Serviço responsável pelo gerenciamento dos ativos.
+
+Os ativos ficam num dicionário em memória, indexado pelo ID (requisito 9 do
+Trabalho 1): buscar por ID é um acesso direto, sem reler o arquivo nem
+percorrer uma lista. O arquivo JSON continua sendo a fonte de verdade:
+toda alteração é gravada nele logo depois de feita na memória.
+"""
 
 from pathlib import Path
 
 from src.modelos.enums import StatusVulnerabilidade
 from src.modelos.vulnerabilidades import Vulnerabilidade
+from src.persistencia.erros import ErroDados
 from src.persistencia.persistencia import Persistencia
 
 CAMPOS_COMUNS = {"nome", "responsavel", "setor", "vulnerabilidades"}
 
 
 class GerenciadorAtivos:
-    """Gerencia cadastro, consulta, atualização e remoção de ativos."""
+    """Gerencia cadastro, consulta, atualização e remoção de ativos.
+
+    Os objetos devolvidos são os mesmos que estão na memória do gerenciador.
+    Para alterar um ativo, use os métodos daqui (atualizar_ativo etc.):
+    mudar o objeto por fora altera a memória sem gravar no arquivo.
+    """
 
     def __init__(self, caminho_arquivo="ativos.json"):
         self.caminho_arquivo = Path(caminho_arquivo)
@@ -20,8 +32,13 @@ class GerenciadorAtivos:
 
     # ------------------------------------------------------------ memória
     def _indice(self):
-        """Devolve o dict de ativos, lendo o arquivo só na primeira vez."""
+        """Devolve o dict de ativos, lendo o arquivo só na primeira vez.
 
+        A carga é preguiçosa de propósito: se o arquivo estiver corrompido,
+        o erro aparece quando o usuário usa o menu (onde é tratado), e não
+        ao iniciar o programa. Como _ativos só é preenchido quando a leitura
+        dá certo, corrigir o arquivo e tentar de novo funciona.
+        """
         if self._ativos is None:
             self._ativos = self._ler_do_arquivo()
 
@@ -36,7 +53,7 @@ class GerenciadorAtivos:
         for ativo in self.persistencia.carregar_dados(self.caminho_arquivo):
             # Num dict, um ID repetido sobrescreveria o anterior em silêncio.
             if ativo.id in ativos:
-                raise ValueError(
+                raise ErroDados(
                     f"O arquivo contém o ID {ativo.id} repetido."
                 )
 

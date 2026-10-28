@@ -93,5 +93,40 @@ class TesteCorrigidaReduzRisco(unittest.TestCase):
         self.assertAlmostEqual(depois[1]["risco_efetivo"], 0.0 + 0.5 * 4.0)
 
 
+
+class TesteMesmoIdNotasDiferentes(unittest.TestCase):
+    """Regressão: a nota do segundo ativo era descartada em silêncio."""
+
+    def test_mesma_descricao_manual_com_notas_diferentes(self):
+        a = Notebook(1, "A", "x", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 10.0, "Aberta")], "8GB")
+        b = Notebook(2, "B", "y", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 5.0, "Aberta")], "8GB")
+        self.assertEqual(a.vulnerabilidades[0].id, b.vulnerabilidades[0].id)   # mesmo ID local
+        r = calcular_risco_efetivo([a, b], [])
+        self.assertEqual([x["risco_proprio"] for x in r], [10.0, 5.0])
+
+    def test_mesmo_cve_com_nota_do_nvd_e_nota_digitada(self):
+        a = Notebook(1, "A", "x", "TI", [Vulnerabilidade("d", "c", 10.0, "Aberta", id="CVE-2021-44228")], "8GB")
+        b = Notebook(2, "B", "y", "TI", [Vulnerabilidade("d", "c", 9.8, "Aberta", id="CVE-2021-44228")], "8GB")
+        r = calcular_risco_efetivo([a, b], [])
+        self.assertEqual([x["risco_proprio"] for x in r], [10.0, 9.8])
+
+    def test_mesmo_id_e_mesma_nota_continua_numa_coluna_so(self):
+        a = Notebook(1, "A", "x", "TI", [v("CVE-1", 7.0)], "8GB")
+        b = Notebook(2, "B", "y", "TI", [v("CVE-1", 7.0, "Em tratamento")], "8GB")
+        M, vetor, _ = construir_matriz_incidencia([a, b])
+        self.assertEqual((M, vetor), ([[1], [1]], [7.0]))
+
+    def test_risco_proprio_e_sempre_a_soma_das_notas_das_vulnerabilidades_ativas(self):
+        # Propriedade geral: independe de como os ativos compartilham IDs.
+        import itertools
+        notas = [3.0, 5.5, 9.0]
+        for combinacao in itertools.product(notas, repeat=3):
+            ativos = [Notebook(i + 1, f"A{i}", "x", "TI",
+                      [Vulnerabilidade("igual", "igual", n, "Aberta"), v(f"U{i}", 1.0)], "8GB")
+                      for i, n in enumerate(combinacao)]
+            r = calcular_risco_efetivo(ativos, [])
+            self.assertEqual([x["risco_proprio"] for x in r], [n + 1.0 for n in combinacao])
+
+
 if __name__ == "__main__":
     unittest.main()
