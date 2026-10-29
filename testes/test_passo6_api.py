@@ -110,7 +110,7 @@ class TesteAtivos(Base):
         }
         for codigo, (campo, valor) in campos.items():
             r = self.c.post("/api/ativos", json={
-                "id": codigo, "tipo": codigo, "nome": f"N{codigo}",
+                "id": codigo, "tipo": codigo, "nome": f"Ativo{codigo}",
                 "responsavel": "Ana", "setor": "TI", campo: valor})
             self.assertEqual(r.status_code, 201, r.json)
             self.assertEqual(r.json["valor_campo"], valor)
@@ -151,7 +151,7 @@ class TesteAtivos(Base):
     def test_busca_por_nome_e_tipo(self):
         self.ativo(1, nome="Notebook Financeiro")
         self.ativo(2, nome="notebook rh")
-        self.c.post("/api/ativos", json={"id": 3, "tipo": 4, "nome": "DB",
+        self.c.post("/api/ativos", json={"id": 3, "tipo": 4, "nome": "Banco DB",
                                          "responsavel": "x", "setor": "y", "sgbd": "PG"})
         self.assertEqual(len(self.c.get("/api/ativos?q=NOTEBOOK").json), 2)
         self.assertEqual([a["id"] for a in self.c.get("/api/ativos?tipo=4").json], [3])
@@ -365,7 +365,7 @@ class TesteConcorrenciaEPersistencia(Base):
 
         def cadastrar(i):
             cliente = self.app.test_client()
-            r = cliente.post("/api/ativos", json={"id": i, "tipo": 1, "nome": f"A{i}",
+            r = cliente.post("/api/ativos", json={"id": i, "tipo": 1, "nome": f"Ativo{i}",
                              "responsavel": "x", "setor": "y", "memoria_ram": "8GB"})
             resultados.append(r.status_code)
 
@@ -382,7 +382,7 @@ class TesteConcorrenciaEPersistencia(Base):
         resultados = []
 
         def cadastrar():
-            r = self.app.test_client().post("/api/ativos", json={"id": 7, "tipo": 1, "nome": "A",
+            r = self.app.test_client().post("/api/ativos", json={"id": 7, "tipo": 1, "nome": "Ativo A",
                                             "responsavel": "x", "setor": "y", "memoria_ram": "8GB"})
             resultados.append(r.status_code)
 
@@ -416,7 +416,7 @@ class TesteDadosCorrompidos(Base):
 
     def test_ativos_corrompidos_dao_503_em_leitura_escrita_e_risco(self):
         self.escrever("ativos.json", "{ quebrado")
-        corpo = {"id": 1, "tipo": 1, "nome": "x", "responsavel": "y", "setor": "z", "memoria_ram": "8GB"}
+        corpo = {"id": 1, "tipo": 1, "nome": "Note X", "responsavel": "y", "setor": "z", "memoria_ram": "8GB"}
         for metodo, url, kw in (("get", "/api/ativos", {}), ("get", "/api/ativos/1", {}),
                                 ("get", "/api/risco", {}), ("post", "/api/ativos", {"json": corpo})):
             with self.subTest(metodo=metodo, url=url):
@@ -425,7 +425,7 @@ class TesteDadosCorrompidos(Base):
                 self.assertNotIn(self.tmp.name, r.get_data(as_text=True))   # não vaza caminho
 
     def test_cada_tipo_de_corrupcao_vira_503(self):
-        ruim = {"id": 1, "tipo": "Notebook", "nome": "n", "responsavel": "r", "setor": "s",
+        ruim = {"id": 1, "tipo": "Notebook", "nome": "Note N", "responsavel": "r", "setor": "s",
                 "vulnerabilidades": [], "memoria_ram": "8GB"}
         casos = {
             "id repetido": json.dumps([ruim, ruim]),

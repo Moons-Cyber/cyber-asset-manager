@@ -36,9 +36,9 @@ def vuln(i, nota):
 
 def ativos_da_aula():
     """Slide 'O cenário que vamos usar': V1=9,8 (Web); V2=5,3 (Web e BD); V3=7,5 (App)."""
-    return [Notebook(1, "Web", "x", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "16GB"),
-            Notebook(2, "App", "x", "TI", [vuln(3, 7.5)], "16GB"),
-            Notebook(3, "BD", "x", "TI", [vuln(2, 5.3)], "16GB")]
+    return [Notebook(1, "Web", "Joe", "TI", [vuln(1, 9.8), vuln(2, 5.3)], "16GB"),
+            Notebook(2, "App", "Gab", "TI", [vuln(3, 7.5)], "16GB"),
+            Notebook(3, "Banco BD", "Lina", "TI", [vuln(2, 5.3)], "16GB")]
 
 
 def detalhe_valido(classe):
@@ -110,7 +110,7 @@ class TesteQuandoOModeloQuebra(unittest.TestCase):
     def test_cadastro_recusa_a_dependencia_que_leva_a_soma_a_1(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3)]
+            ativos = [Notebook(i, f"Ativo{i}", "x", "TI", [], "16GB") for i in (1, 2, 3)]
             g.cadastrar_dependencia(Dependencia(2, 1, 0.5), ativos)
             with self.assertRaises(ValueError):
                 g.cadastrar_dependencia(Dependencia(3, 1, 0.5), ativos)
@@ -138,14 +138,14 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
         for ordem in ((0.7, 0.2, 0.1), (0.1, 0.2, 0.7), (0.2, 0.7, 0.1), (0.1, 0.7, 0.2)):
             with self.subTest(ordem=ordem), tempfile.TemporaryDirectory() as t:
                 g = GerenciadorDependencias(Path(t) / "d.json")
-                ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
+                ativos = [Notebook(i, f"Ativo{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
                 for origem, peso in zip((2, 3), ordem[:2]):
                     g.cadastrar_dependencia(Dependencia(origem, 1, peso), ativos)
                 with self.assertRaises(ValueError):
                     g.cadastrar_dependencia(Dependencia(4, 1, ordem[2]), ativos)
 
     def test_montagem_de_A_tambem_recusa_arquivo_editado_a_mao(self):
-        ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
+        ativos = [Notebook(i, f"Ativo{i}", "x", "TI", [], "16GB") for i in (1, 2, 3, 4)]
         deps = [Dependencia(2, 1, 0.7), Dependencia(3, 1, 0.2), Dependencia(4, 1, 0.1)]
         with self.assertRaises(ValueError):
             construir_matriz_dependencias(ativos, deps)
@@ -153,7 +153,7 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
     def test_cadastro_e_montagem_concordam(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [vuln(i, 5.0)], "16GB") for i in (1, 2, 3, 4)]
+            ativos = [Notebook(i, f"Ativo{i}", "x", "TI", [vuln(i, 5.0)], "16GB") for i in (1, 2, 3, 4)]
             for destino in (1, 2, 3, 4):
                 outros = [i for i in (1, 2, 3, 4) if i != destino]
                 for origem, peso in zip(outros, (0.7, 0.2, 0.1)):
@@ -168,7 +168,7 @@ class TesteToleranciaNaSomaDosPesos(unittest.TestCase):
     def test_pesos_altos_mas_validos_continuam_aceitos(self):
         with tempfile.TemporaryDirectory() as t:
             g = GerenciadorDependencias(Path(t) / "d.json")
-            ativos = [Notebook(i, f"A{i}", "x", "TI", [], "16GB") for i in (1, 2)]
+            ativos = [Notebook(i, f"Ativo{i}", "x", "TI", [], "16GB") for i in (1, 2)]
             g.cadastrar_dependencia(Dependencia(2, 1, 0.999), ativos)
             self.assertEqual(len(g.listar_dependencias()), 1)
 
@@ -231,7 +231,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
         for classe, fator in esperado.items():
             with self.subTest(tipo=classe.__name__):
                 self.assertEqual(
-                    classe(1, "n", "r", "s", [], detalhe_valido(classe)).obter_fator_exposicao(),
+                    classe(1, "nome", "r", "s", [], detalhe_valido(classe)).obter_fator_exposicao(),
                     fator,
                 )
 
@@ -243,9 +243,9 @@ class TesteFatorDeExposicao(unittest.TestCase):
             SemFator(1, "n", "r", "s", [])
 
     def test_matriz_F_e_diagonal_na_ordem_dos_ativos(self):
-        ativos = [Servidor(1, "a", "r", "s", [], "Intel Xeon"),
-                  Notebook(2, "b", "r", "s", [], "16GB"),
-                  Roteador(3, "c", "r", "s", [], "TP-Link Archer C6")]
+        ativos = [Servidor(1, "Ativo a", "r", "s", [], "Intel Xeon"),
+                  Notebook(2, "Ativo b", "r", "s", [], "16GB"),
+                  Roteador(3, "Ativo c", "r", "s", [], "TP-Link Archer C6")]
         np.testing.assert_array_equal(construir_matriz_exposicao(ativos), np.diag([1.5, 1.0, 1.2]))
 
     def test_exemplo_do_slide_F_igual_a_diag_1_5_1_1(self):
@@ -278,7 +278,7 @@ class TesteFatorDeExposicao(unittest.TestCase):
     def test_risco_proprio_e_a_soma_das_notas_vezes_o_fator_em_todos_os_tipos(self):
         for classe in (Notebook, Servidor, Roteador, BancoDeDados):
             with self.subTest(tipo=classe.__name__):
-                ativo = classe(1, "n", "r", "s", [vuln(1, 4.0), vuln(2, 4.0)], detalhe_valido(classe))
+                ativo = classe(1, "nome", "r", "s", [vuln(1, 4.0), vuln(2, 4.0)], detalhe_valido(classe))
                 r = calcular_risco_efetivo([ativo], [])[0]
                 self.assertAlmostEqual(r["risco_proprio"], 8.0 * ativo.obter_fator_exposicao())
 

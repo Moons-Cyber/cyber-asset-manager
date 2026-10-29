@@ -20,7 +20,7 @@ from src.servicos.gerenciador_dependencias import GerenciadorDependencias
 
 def ativo(id_, nota=None):
     vulns = [Vulnerabilidade("d", "c", nota, "Aberta", id=f"V{id_}")] if nota else []
-    return Notebook(id_, f"A{id_}", "x", "TI", vulns, "8GB")
+    return Notebook(id_, f"Ativo{id_}", "x", "TI", vulns, "8GB")
 
 
 class TesteCenarioResolvidoAMao(unittest.TestCase):

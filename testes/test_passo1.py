@@ -182,8 +182,8 @@ class TesteMatrizPorId(unittest.TestCase):
     def test_mudar_status_nao_cria_coluna_nova(self):
         v1 = Vulnerabilidade("Log4Shell", "RCE", 10.0, "Aberta", id="CVE-2021-44228", fonte="NVD")
         v2 = Vulnerabilidade("Log4Shell", "RCE", 10.0, "Em tratamento", id="CVE-2021-44228", fonte="NVD")
-        a = Notebook(1, "A", "x", "TI", [v1], "8GB")
-        b = Notebook(2, "B", "y", "TI", [v2], "8GB")
+        a = Notebook(1, "Note A", "x", "TI", [v1], "8GB")
+        b = Notebook(2, "Note B", "y", "TI", [v2], "8GB")
         M, v, rotulos = construir_matriz_incidencia([a, b])
         self.assertEqual(M, [[1], [1]])   # uma única coluna, afetando os dois
         self.assertEqual(v, [10.0])

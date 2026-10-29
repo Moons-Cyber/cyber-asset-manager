@@ -32,13 +32,18 @@ class TesteValidacoes(unittest.TestCase):
 
     def test_modelos_aplicam_validacao_diretamente(self):
         with self.assertRaises(ValueError):
-            Notebook(1, "NB", "Ana", "TI", [], "-2")
+            Notebook(1, "Note NB", "Ana", "TI", [], "-2")
         with self.assertRaises(ValueError):
             Roteador(2, "RTR", "Ana", "TI", [], "-2")
         with self.assertRaises(ValueError):
             Servidor(3, "SRV", "Ana", "TI", [], "-2")
         with self.assertRaises(ValueError):
-            BancoDeDados(4, "DB", "Ana", "TI", [], "-2")
+            BancoDeDados(4, "Banco DB", "Ana", "TI", [], "-2")
+
+    def test_nome_curto_ou_vazio_e_recusado_em_qualquer_tipo(self):
+        for nome in ("A", "  ", "12"):
+            with self.subTest(nome=nome), self.assertRaises(ValueError):
+                Notebook(1, nome, "Ana", "TI", [], "8GB")
 
 
 if __name__ == "__main__":

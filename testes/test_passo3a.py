@@ -57,8 +57,8 @@ class TesteResumo(unittest.TestCase):
 
 class TesteCorrigidaReduzRisco(unittest.TestCase):
     def ativos(self, status_log4j):
-        a = Notebook(1, "A", "x", "TI", [v("CVE-1", 10.0, status_log4j), v("L-2", 4.0)], "8GB")
-        b = Notebook(2, "B", "y", "TI", [v("CVE-1", 10.0, status_log4j)], "8GB")
+        a = Notebook(1, "Alienware", "Jio", "TI", [v("CVE-1", 10.0, status_log4j), v("L-2", 4.0)], "8GB")
+        b = Notebook(2, "Acer", "Gab", "TI", [v("CVE-1", 10.0, status_log4j)], "8GB")
         return [a, b]
 
     def test_corrigida_sai_da_matriz(self):
@@ -78,8 +78,8 @@ class TesteCorrigidaReduzRisco(unittest.TestCase):
             self.assertEqual(r[1]["risco_proprio"], 10.0)
 
     def test_tudo_corrigido_nao_quebra_e_da_zero(self):
-        a = Notebook(1, "A", "x", "TI", [v("CVE-1", 9.0, "Corrigida")], "8GB")
-        b = Notebook(2, "B", "y", "TI", [], "8GB")
+        a = Notebook(1, "Alienware", "Jio", "TI", [v("CVE-1", 9.0, "Corrigida")], "8GB")
+        b = Notebook(2, "Acer", "Gab", "TI", [], "8GB")
         r = calcular_risco_efetivo([a, b], [])
         self.assertEqual([x["risco_efetivo"] for x in r], [0.0, 0.0])
 
@@ -98,21 +98,21 @@ class TesteMesmoIdNotasDiferentes(unittest.TestCase):
     """Regressão: a nota do segundo ativo era descartada em silêncio."""
 
     def test_mesma_descricao_manual_com_notas_diferentes(self):
-        a = Notebook(1, "A", "x", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 10.0, "Aberta")], "8GB")
-        b = Notebook(2, "B", "y", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 5.0, "Aberta")], "8GB")
+        a = Notebook(1, "Alienware", "Jio", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 10.0, "Aberta")], "8GB")
+        b = Notebook(2, "Acer", "Gab", "TI", [Vulnerabilidade("Senha fraca", "Acesso", 5.0, "Aberta")], "8GB")
         self.assertEqual(a.vulnerabilidades[0].id, b.vulnerabilidades[0].id)   # mesmo ID local
         r = calcular_risco_efetivo([a, b], [])
         self.assertEqual([x["risco_proprio"] for x in r], [10.0, 5.0])
 
     def test_mesmo_cve_com_nota_do_nvd_e_nota_digitada(self):
-        a = Notebook(1, "A", "x", "TI", [Vulnerabilidade("d", "c", 10.0, "Aberta", id="CVE-2021-44228")], "8GB")
-        b = Notebook(2, "B", "y", "TI", [Vulnerabilidade("d", "c", 9.8, "Aberta", id="CVE-2021-44228")], "8GB")
+        a = Notebook(1, "Alienware", "Jio", "TI", [Vulnerabilidade("d", "c", 10.0, "Aberta", id="CVE-2021-44228")], "8GB")
+        b = Notebook(2, "Acer", "Gab", "TI", [Vulnerabilidade("d", "c", 9.8, "Aberta", id="CVE-2021-44228")], "8GB")
         r = calcular_risco_efetivo([a, b], [])
         self.assertEqual([x["risco_proprio"] for x in r], [10.0, 9.8])
 
     def test_mesmo_id_e_mesma_nota_continua_numa_coluna_so(self):
-        a = Notebook(1, "A", "x", "TI", [v("CVE-1", 7.0)], "8GB")
-        b = Notebook(2, "B", "y", "TI", [v("CVE-1", 7.0, "Em tratamento")], "8GB")
+        a = Notebook(1, "Alienware", "Jio", "TI", [v("CVE-1", 7.0)], "8GB")
+        b = Notebook(2, "Acer", "Gab", "TI", [v("CVE-1", 7.0, "Em tratamento")], "8GB")
         M, vetor, _ = construir_matriz_incidencia([a, b])
         self.assertEqual((M, vetor), ([[1], [1]], [7.0]))
 
@@ -121,7 +121,7 @@ class TesteMesmoIdNotasDiferentes(unittest.TestCase):
         import itertools
         notas = [3.0, 5.5, 9.0]
         for combinacao in itertools.product(notas, repeat=3):
-            ativos = [Notebook(i + 1, f"A{i}", "x", "TI",
+            ativos = [Notebook(i + 1, f"Alienware{i}", "Jio", "TI",
                       [Vulnerabilidade("igual", "igual", n, "Aberta"), v(f"U{i}", 1.0)], "8GB")
                       for i, n in enumerate(combinacao)]
             r = calcular_risco_efetivo(ativos, [])

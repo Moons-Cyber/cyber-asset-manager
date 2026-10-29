@@ -54,7 +54,7 @@ class TesteClasse(unittest.TestCase):
         self.assertIn("SGBD: PostgreSQL", saida.getvalue())
 
     def test_convive_com_os_outros_tipos_e_filtro_por_tipo_funciona(self):
-        ativos = [Notebook(1, "N", "x", "TI", [], "8GB"), banco(2), banco(3)]
+        ativos = [Notebook(1, "Note N", "x", "TI", [], "8GB"), banco(2), banco(3)]
         self.assertEqual(len(filtrar_por_tipo(ativos, BancoDeDados)), 2)
         self.assertEqual(len(filtrar_por_tipo(ativos, Notebook)), 1)
 
@@ -72,13 +72,13 @@ class TesteContratoDosTipos(unittest.TestCase):
                 self.assertTrue(cls.campo_especifico and cls.rotulo_campo)
                 self.assertIn(cls.campo_especifico, inspect.signature(cls.__init__).parameters)
                 detalhe = DETALHES_VALIDOS[cls]
-                obj = cls(1, "n", "r", "s", [], detalhe)
+                obj = cls(1, "nome", "r", "s", [], detalhe)
                 self.assertEqual(getattr(obj, cls.campo_especifico), detalhe)
 
     def test_nome_do_tipo_gravado_e_reconhecido_na_leitura(self):
         for cls in CLASSES:
             with self.subTest(cls=cls.__name__):
-                obj = cls(1, "n", "r", "s", [], DETALHES_VALIDOS[cls])
+                obj = cls(1, "nome", "r", "s", [], DETALHES_VALIDOS[cls])
                 self.assertIs(Persistencia.TIPOS[obj.obter_tipo()], cls)
 
     def test_todo_tipo_do_enum_tem_classe_e_rotulo(self):
@@ -114,7 +114,7 @@ class TesteGerenciadorComBanco(unittest.TestCase):
                 self.g.atualizar_ativo(10, **{campo: "x"})
 
     def test_notebook_nao_aceita_sgbd(self):
-        self.g.cadastrar_ativo(Notebook(1, "N", "x", "TI", [], "8GB"))
+        self.g.cadastrar_ativo(Notebook(1, "Note N", "x", "TI", [], "8GB"))
         with self.assertRaises(ValueError):
             self.g.atualizar_ativo(1, sgbd="x")
         self.g.atualizar_ativo(1, memoria_ram="16GB")   # o próprio continua valendo
@@ -151,7 +151,7 @@ class TesteMenu(unittest.TestCase):
         for cls, rotulo in esperado.items():
             with self.subTest(cls=cls.__name__), tempfile.TemporaryDirectory() as t:
                 g = GerenciadorAtivos(Path(t) / "a.json")
-                g.cadastrar_ativo(cls(1, "X", "r", "s", [], DETALHES_VALIDOS[cls]))
+                g.cadastrar_ativo(cls(1, "Ativo X", "r", "s", [], DETALHES_VALIDOS[cls]))
                 saida = self._executar(main.atualizar_ativo, ["1", "0"], g, None)
                 self.assertIn(rotulo, saida)
 

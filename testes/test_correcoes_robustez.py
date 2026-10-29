@@ -47,7 +47,7 @@ class TesteValidacaoNaAtualizacao(Base):
 
     def test_api_responde_400_e_o_arquivo_continua_carregando(self):
         c = criar_app(self.pasta, cliente_nvd=NVDFalso()).test_client()
-        c.post("/api/ativos", json={"id": 1, "tipo": 1, "nome": "N", "responsavel": "R",
+        c.post("/api/ativos", json={"id": 1, "tipo": 1, "nome": "Note N", "responsavel": "R",
                                     "setor": "S", "memoria_ram": "8GB"})
         r = c.patch("/api/ativos/1", json={"memoria_ram": "abc"})
         self.assertEqual(r.status_code, 400)
@@ -130,7 +130,7 @@ class TesteRemocaoConsistente(Base):
 class TesteIdDeCveNaUrl(Base):
     def test_patch_aceita_cve_em_minusculas(self):
         c = criar_app(self.pasta, cliente_nvd=NVDFalso()).test_client()
-        c.post("/api/ativos", json={"id": 1, "tipo": 1, "nome": "N", "responsavel": "R",
+        c.post("/api/ativos", json={"id": 1, "tipo": 1, "nome": "Note N", "responsavel": "R",
                                     "setor": "S", "memoria_ram": "8GB"})
         c.post("/api/ativos/1/vulnerabilidades",
                json={"cve": "CVE-2021-44228", "categoria": "RCE"})
