@@ -1,4 +1,4 @@
-def validar_texto_identificacao(valor, campo):
+def validar_texto_identificacao(valor, campo, minimo=2):
     """Valida um campo textual que identifica um componente."""
     if not isinstance(valor, str):
         raise ValueError(f"{campo} deve ser um texto.")
@@ -7,6 +7,10 @@ def validar_texto_identificacao(valor, campo):
 
     if not valor:
         raise ValueError(f"{campo} não pode ficar vazio.")
+    
+    if len(valor) < minimo:
+        raise ValueError(f"{campo} deve ter pelo menos {minimo} caracteres")
+
 
     if not any(caractere.isalpha() for caractere in valor):
         raise ValueError(f"{campo} deve conter pelo menos uma letra.")

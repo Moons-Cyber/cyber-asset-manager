@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from src.modelos.validacoes import validar_texto_identificacao
+
 
 
 class Ativo(ABC):
@@ -10,7 +12,7 @@ class Ativo(ABC):
 
     def __init__(self, id, nome, responsavel,setor,vulnerabilidades):
         self.id = id
-        self.nome = nome
+        self.nome = validar_texto_identificacao(nome, "Nome", minimo=3)
         self.responsavel = responsavel
         self.setor = setor
         self.vulnerabilidades = vulnerabilidades
