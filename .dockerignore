@@ -25,3 +25,8 @@ src/algoritimos
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# Surto (interface web)
+diario_surto.json
+dados_ficticios
+ferramentas

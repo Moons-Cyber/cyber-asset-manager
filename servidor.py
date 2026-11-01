@@ -9,13 +9,22 @@ Configuração por variáveis de ambiente:
     HOST       endereço de escuta (padrão 127.0.0.1; no Docker use 0.0.0.0)
     PORT       porta (padrão 5000)
     NVD_API_KEY (opcional) chave gratuita do NVD, para consultas mais rápidas
+    SURTO_INTERVALO_S   segundos entre as simulações anotadas no diário
+                        (padrão 3600 = 1 h; 0 anota só ao ligar; -1 desliga)
+    SURTO_MAX_ENTRADAS  máximo de entradas guardadas no diário (padrão 1000)
 """
 
 import os
 
 from src.api.aplicacao import criar_app
 
-app = criar_app(os.environ.get("DADOS_DIR", "."))
+_intervalo = int(os.environ.get("SURTO_INTERVALO_S", "3600"))
+
+app = criar_app(
+    os.environ.get("DADOS_DIR", "."),
+    diario_intervalo=None if _intervalo < 0 else _intervalo,
+    diario_max=int(os.environ.get("SURTO_MAX_ENTRADAS", "1000")),
+)
 
 if __name__ == "__main__":
     app.run(
