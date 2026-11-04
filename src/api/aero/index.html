@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventário de Ativos (tema Aero)</title>
+  <link rel="stylesheet" href="/aero/aero.css">
+</head>
+<body>
+  <!-- Tela de entrada: aparece enquanto o serviço é consultado -->
+  <div id="boot" role="status" aria-live="polite">
+    <div class="boot-centro">
+      <div class="boot-logo" id="boot-logo"></div>
+      <h1>Inventário de Ativos de TI</h1>
+      <p>Trabalho 2 · Risco efetivo por álgebra linear</p>
+      <div class="carga" aria-hidden="true"><i></i><i></i><i></i></div>
+      <p class="boot-dica" id="boot-dica">Consultando o serviço…</p>
+    </div>
+    <p class="boot-rodape">Clique ou pressione uma tecla para pular</p>
+  </div>
+
+  <main id="mesa">
+    <!-- Papel de parede: céu, sol e colinas, desenhados do zero -->
+    <svg id="papel" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0c4fc9"/>
+          <stop offset=".5" stop-color="#3f93f0"/>
+          <stop offset=".78" stop-color="#9fd5ff"/>
+          <stop offset="1" stop-color="#d9f1ff"/>
+        </linearGradient>
+        <radialGradient id="sol" cx=".8" cy=".16" r=".42">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+          <stop offset=".3" stop-color="#eaf7ff" stop-opacity=".45"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="colina-fundo" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6fc86a"/>
+          <stop offset="1" stop-color="#3b9a4a"/>
+        </linearGradient>
+        <linearGradient id="colina-meio" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7ddf3d"/>
+          <stop offset="1" stop-color="#2f9a1a"/>
+        </linearGradient>
+        <linearGradient id="colina-frente" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9bf04a"/>
+          <stop offset=".55" stop-color="#46b81f"/>
+          <stop offset="1" stop-color="#23850f"/>
+        </linearGradient>
+        <filter id="nuvem" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>
+      </defs>
+      <rect width="1600" height="900" fill="url(#ceu)"/>
+      <rect width="1600" height="900" fill="url(#sol)"/>
+      <g filter="url(#nuvem)" fill="#fff" opacity=".9">
+        <ellipse cx="330" cy="190" rx="190" ry="34"/><ellipse cx="450" cy="170" rx="130" ry="38"/>
+        <ellipse cx="1030" cy="130" rx="210" ry="30"/><ellipse cx="1170" cy="150" rx="120" ry="30"/>
+        <ellipse cx="760" cy="300" rx="150" ry="22" opacity=".7"/><ellipse cx="1400" cy="320" rx="170" ry="26" opacity=".8"/>
+      </g>
+      <path d="M0 585 C 220 500, 470 520, 760 565 S 1290 495, 1600 545 V900 H0Z" fill="url(#colina-fundo)"/>
+      <path d="M0 665 C 260 585, 560 655, 880 625 S 1380 575, 1600 640 V900 H0Z" fill="url(#colina-meio)"/>
+      <path d="M0 790 C 330 665, 720 745, 1040 715 S 1440 650, 1600 715 V900 H0Z" fill="url(#colina-frente)"/>
+      <path d="M0 790 C 330 665, 720 745, 1040 715 S 1440 650, 1600 715" fill="none" stroke="#d6ffaa" stroke-opacity=".55" stroke-width="3"/>
+      <path d="M0 665 C 260 585, 560 655, 880 625 S 1380 575, 1600 640" fill="none" stroke="#c9ff9a" stroke-opacity=".35" stroke-width="2"/>
+    </svg>
+    <div id="bolhas" aria-hidden="true"></div>
+    <nav id="icones" aria-label="Programas"></nav>
+    <div id="area-janelas"></div>
+  </main>
+
+  <div id="menu-iniciar" role="menu" aria-label="Menu iniciar" hidden></div>
+
+  <footer id="barra">
+    <button type="button" id="btn-iniciar" aria-haspopup="menu" aria-expanded="false"><span class="orbe" id="orbe-iniciar"></span><span>iniciar</span></button>
+    <div id="tarefas" role="toolbar" aria-label="Janelas abertas"></div>
+    <div id="bandeja">
+      <button type="button" id="tray-saude" class="tray" aria-label="Saúde do serviço">
+      </button>
+      <time id="relogio">--:--</time>
+    </div>
+  </footer>
+
+  <div id="baloes" aria-live="polite"></div>
+
+  <noscript><p style="padding:2rem;color:#fff">Esta interface precisa de JavaScript.</p></noscript>
+
+  <script src="/surto/simulacao.js"></script>
+  <script src="/aero/nucleo.js"></script>
+  <script src="/aero/icones.js"></script>
+  <script src="/aero/janelas.js"></script>
+  <script src="/aero/app_ativos.js"></script>
+  <script src="/aero/app_surto.js"></script>
+  <script src="/aero/app_monitor.js"></script>
+  <script src="/aero/app_ajuda.js"></script>
+  <script src="/aero/desktop.js"></script>
+</body>
+</html>

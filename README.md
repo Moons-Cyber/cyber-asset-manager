@@ -140,6 +140,23 @@ Atalhos na aba Surto: `espaço` inicia/pausa, `R` zera. O controle **Pesos** mul
 
 ---
 
+## 🫧 Tema alternativo: Aero (estilo Windows XP)
+
+A mesma API tem uma segunda interface, em `/aero` (ex.: `http://127.0.0.1:5000/aero`): um desktop
+no estilo Frutiger Aero / Windows XP, com janelas arrastáveis, barra de tarefas, menu iniciar e uma
+bandeja que mostra se o serviço está no ar. Os ícones e o fundo foram desenhados do zero (SVG/canvas),
+usa só fontes do sistema e funciona sem internet.
+
+| Janela | O que faz |
+|---|---|
+| Varredura de Contágio | O mapa do surto, o R0, sorteio × álgebra e o ranking de defesa (botão Corrigir) |
+| Gerenciador de Ativos | Novo / Editar / Excluir, falhas de cada ativo e aba de dependências |
+| Monitor do Serviço | Saúde da API e as 24 horas do diário |
+| Central de Ajuda | A matemática explicada passo a passo |
+
+O tema Pixel Art continua em `/surto`; o menu iniciar (Aero) e o link "Tema Aero" (Pixel Art) alternam entre os dois.
+No celular, as janelas abrem em tela cheia.
+
 ## 🧮 A matemática do risco (resumo)
 
 1. **Risco próprio:** `b = F · (M · v)`. A matriz `M` marca quais falhas abertas cada ativo tem, `v` traz as notas CVSS e `F` é o fator de exposição de cada tipo (servidor 1,5; roteador 1,2; notebook e banco de dados 1,0).

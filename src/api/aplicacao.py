@@ -162,6 +162,13 @@ PASTA_SURTO = Path(__file__).parent / "surto"
 # Só estes arquivos são servidos em /surto/<nome>; qualquer outro nome dá 404.
 ARQUIVOS_SURTO = {"surto.css", "pixel.js", "simulacao.js", "app.js", "ativos.js", "som.js"}
 
+# Tema alternativo (Frutiger Aero / "Windows XP"): mesma API, outra interface.
+PASTA_AERO = Path(__file__).parent / "aero"
+ARQUIVOS_AERO = {
+    "aero.css", "nucleo.js", "icones.js", "janelas.js", "app_ativos.js",
+    "app_surto.js", "app_monitor.js", "app_ajuda.js", "desktop.js",
+}
+
 
 def _parametro(nome, padrao, minimo, maximo, tipo=float):
     """Lê ?nome=valor da URL, com faixa permitida; erro 400 se inválido."""
@@ -348,6 +355,7 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
             "servico": "Inventário de ativos",
             "saude": "/api/saude",
             "interface": "/surto",
+            "interface_aero": "/aero",
         })
 
     @app.get("/api/saude")
@@ -682,10 +690,20 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
             raise ErroApi("Arquivo não encontrado.", 404)
         return send_from_directory(PASTA_SURTO, nome)
 
+    @app.get("/aero")
+    def pagina_aero():
+        return send_from_directory(PASTA_AERO, "index.html")
+
+    @app.get("/aero/<nome>")
+    def arquivo_aero(nome):
+        if nome not in ARQUIVOS_AERO:
+            raise ErroApi("Arquivo não encontrado.", 404)
+        return send_from_directory(PASTA_AERO, nome)
+
     # Respostas da API são sempre dinâmicas: o navegador não deve reaproveitá-las.
     @app.after_request
     def nao_guardar_em_cache(resposta):
-        if request.path.startswith(("/api/", "/surto")):
+        if request.path.startswith(("/api/", "/surto", "/aero")):
             resposta.headers["Cache-Control"] = "no-store"
         return resposta
 
