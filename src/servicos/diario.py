@@ -1,12 +1,12 @@
-"""Diário do surto: o container roda uma simulação a cada hora e anota.
+"""Diário do serviço: o container calcula o risco a cada hora e anota.
 
-Serve para o teste de 24 horas: no fim, o diário mostra uma entrada por
-hora (o servidor ficou no ar) e, em cada uma, o Monte Carlo concordando com
-a álgebra linear.
+Serve para o teste de 24 horas: no fim, o diário mostra uma entrada por hora
+(prova de que o servidor ficou no ar) e, em cada uma, o risco global da rede
+calculado por (I - A)x = b naquele momento.
 
-Fica num JSON (diario_surto.json) na pasta de dados, ou seja, no volume do
-Docker. Tem tamanho máximo e, se o arquivo estragar, recomeça vazio em vez
-de derrubar o servidor: o diário é um extra, não pode quebrar o sistema.
+Fica num JSON (diario.json) na pasta de dados, ou seja, no volume do Docker.
+Tem tamanho máximo e, se o arquivo estragar, recomeça vazio em vez de
+derrubar o servidor: o diário é um extra, não pode quebrar o sistema.
 """
 
 import json
@@ -16,40 +16,36 @@ import time
 from pathlib import Path
 
 from src.persistencia.persistencia import gravar_json_atomico
-from src.servicos.contagio import analisar_surto
+from src.servicos.analise_risco import calcular_risco_efetivo, diagnosticar_sistema
 
 log = logging.getLogger(__name__)
 
 MAX_ENTRADAS_PADRAO = 1000        # ~41 dias com uma entrada por hora
 
 
-def anotar(ativos, dependencias, motivo, rodadas=2000, agora=None):
-    """Roda um surto e resume o resultado numa entrada do diário (função pura)."""
+def anotar(ativos, dependencias, motivo, agora=None):
+    """Calcula o risco e resume o resultado numa entrada do diário (função pura)."""
     entrada = {
         "t": int(agora if agora is not None else time.time()),
         "motivo": motivo,
         "ativos": len(ativos),
         "dependencias": len(dependencias),
         "risco_global": None,
-        "monte_carlo": None,
-        "rodadas": 0,
-        "erro_relativo": None,
-        "rho": None,
+        "invertivel": None,
+        "condicao": None,
         "erro": None,
     }
     try:
-        resultado = analisar_surto(ativos, dependencias, rodadas=rodadas)
+        diagnostico = diagnosticar_sistema(ativos, dependencias)
+        resultados = calcular_risco_efetivo(ativos, dependencias)
     except ValueError as erro:
         entrada["erro"] = str(erro)
         return entrada
 
-    entrada.update({
-        "risco_global": resultado["risco_global"],
-        "monte_carlo": round(resultado["monte_carlo"]["global"], 4),
-        "rodadas": resultado["monte_carlo"]["rodadas"],
-        "erro_relativo": resultado["erro_relativo"],
-        "rho": round(resultado["rho"], 6),
-    })
+    entrada["risco_global"] = round(sum(r["risco_efetivo"] for r in resultados), 4)
+    if diagnostico is not None:
+        entrada["invertivel"] = diagnostico["invertivel"]
+        entrada["condicao"] = round(diagnostico["condicao"], 4)
     return entrada
 
 
@@ -70,7 +66,7 @@ class Diario:
                 entradas = json.load(arquivo)["entradas"]
             return [e for e in entradas if isinstance(e, dict) and "t" in e][-self.max_entradas:]
         except (OSError, ValueError, KeyError, TypeError):
-            log.warning("diario_surto.json ilegível; o diário recomeça vazio.")
+            log.warning("diario.json ilegível; o diário recomeça vazio.")
             return []
 
     def adicionar(self, entrada):
@@ -95,7 +91,7 @@ class GravadorPeriodico:
         self._tarefa = tarefa
         self.intervalo = intervalo
         self._parar = threading.Event()
-        self._thread = threading.Thread(target=self._rodar, name="diario-do-surto", daemon=True)
+        self._thread = threading.Thread(target=self._rodar, name="diario", daemon=True)
 
     def iniciar(self):
         self._thread.start()
@@ -109,4 +105,4 @@ class GravadorPeriodico:
             try:
                 self._tarefa("periódica")
             except Exception:                   # o diário nunca derruba o servidor
-                log.exception("Falha ao anotar o surto periódico")
+                log.exception("Falha ao anotar o diário")

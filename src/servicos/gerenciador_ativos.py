@@ -12,6 +12,7 @@ from src.modelos.enums import StatusVulnerabilidade
 from src.modelos.vulnerabilidades import Vulnerabilidade
 from src.persistencia.erros import ErroDados
 from src.persistencia.persistencia import Persistencia
+from src.persistencia.repositorio import RepositorioAtivosJson
 
 CAMPOS_COMUNS = {"nome", "responsavel", "setor", "vulnerabilidades"}
 
@@ -24,9 +25,14 @@ class GerenciadorAtivos:
     mudar o objeto por fora altera a memória sem gravar no arquivo.
     """
 
-    def __init__(self, caminho_arquivo="ativos.json"):
+    def __init__(self, caminho_arquivo="ativos.json", repositorio=None):
         self.caminho_arquivo = Path(caminho_arquivo)
         self.persistencia = Persistencia()
+        # Repository: o gerenciador só conhece listar() e salvar(); onde os
+        # ativos ficam (JSON, memória...) é problema do repositório.
+        self.repositorio = repositorio or RepositorioAtivosJson(
+            self.caminho_arquivo, self.persistencia
+        )
         # dict {id: ativo}. None = ainda não carregado (carga sob demanda).
         self._ativos = None
 
@@ -45,12 +51,9 @@ class GerenciadorAtivos:
         return self._ativos
 
     def _ler_do_arquivo(self):
-        if not self.caminho_arquivo.exists():
-            return {}
-
         ativos = {}
 
-        for ativo in self.persistencia.carregar_dados(self.caminho_arquivo):
+        for ativo in self.repositorio.listar():
             # Num dict, um ID repetido sobrescreveria o anterior em silêncio.
             if ativo.id in ativos:
                 raise ErroDados(
@@ -76,10 +79,7 @@ class GerenciadorAtivos:
         real do arquivo (que a gravação atômica deixa intacto).
         """
         try:
-            self.persistencia.salvar_dados(
-                list(self._ativos.values()),
-                self.caminho_arquivo,
-            )
+            self.repositorio.salvar(list(self._ativos.values()))
         except Exception:
             self._ativos = None
             raise

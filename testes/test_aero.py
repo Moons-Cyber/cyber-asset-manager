@@ -1,5 +1,7 @@
-"""Testes do tema Aero: páginas servidas só pela lista de arquivos permitidos."""
+"""Testes da interface (tema Aero): arquivos servidos só pela lista permitida,
+e as explicações do Assistente batendo com o código de verdade."""
 
+import json
 import re
 import tempfile
 import unittest
@@ -25,12 +27,12 @@ class TesteTemaAero(unittest.TestCase):
                 self.assertEqual(self.pegar(f"/aero/{nome}").status_code, 200)
 
     def test_arquivos_da_lista_existem_e_nada_sobra_na_pasta(self):
-        em_disco = {p.name for p in PASTA_AERO.iterdir() if p.is_file()}
+        em_disco = {p.name for p in PASTA_AERO.iterdir() if p.is_file() and p.suffix != ".bak"}
         self.assertEqual(em_disco - {"index.html"}, set(ARQUIVOS_AERO))
 
     def test_index_so_carrega_scripts_servidos(self):
         html = (PASTA_AERO / "index.html").read_text(encoding="utf-8")
-        for caminho in re.findall(r'(?:src|href)="(/(?:aero|surto)/[^"]+)"', html):
+        for caminho in re.findall(r'(?:src|href)="(/aero/[^"]+)"', html):
             with self.subTest(caminho=caminho):
                 self.assertEqual(self.pegar(caminho).status_code, 200)
 
@@ -41,10 +43,42 @@ class TesteTemaAero(unittest.TestCase):
 
     def test_nao_fica_em_cache_e_raiz_aponta_para_ele(self):
         self.assertEqual(self.pegar("/aero").headers["Cache-Control"], "no-store")
-        self.assertEqual(self.c.get("/").json["interface_aero"], "/aero")
+        self.assertEqual(self.c.get("/").json["interface"], "/aero")
 
-    def test_tema_pixel_tem_link_para_o_aero(self):
-        self.assertIn('href="/aero"', self.pegar("/surto").get_data(as_text=True))
+    def test_tema_pixel_e_surto_foram_removidos(self):
+        for url in ["/surto", "/surto/app.js", "/api/surto", "/api/surto/diario"]:
+            with self.subTest(url=url):
+                self.assertEqual(self.pegar(url).status_code, 404)
+
+
+class TesteExplicacoesDoAssistente(unittest.TestCase):
+    """Cada caixa "No código" cita um trecho real: se o código mudar, isto avisa."""
+
+    RAIZ = PASTA_AERO.parents[2]
+    PADRAO = re.compile(r'arquivo: "([^"]+)", funcao: "([^"]+)", trecho: "((?:[^"\\]|\\.)*)"')
+
+    def citacoes(self):
+        texto = (PASTA_AERO / "explicacoes.js").read_text(encoding="utf-8")
+        return [(a, f, json.loads(f'"{t}"')) for a, f, t in self.PADRAO.findall(texto)]
+
+    def test_ha_citacoes(self):
+        self.assertGreaterEqual(len(self.citacoes()), 10)
+
+    def test_cada_trecho_existe_no_arquivo_e_na_funcao_citada(self):
+        for arquivo, funcao, trecho in self.citacoes():
+            with self.subTest(arquivo=arquivo, trecho=trecho):
+                fonte = (self.RAIZ / arquivo).read_text(encoding="utf-8")
+                inicio = fonte.find(f"def {funcao}(")
+                self.assertNotEqual(inicio, -1, f"função {funcao} não existe em {arquivo}")
+                proxima = re.search(r"\n(?:    )?def |\n    @app\.", fonte[inicio + 4:])
+                corpo = fonte[inicio: inicio + 4 + proxima.start()] if proxima else fonte[inicio:]
+                self.assertIn(trecho, corpo, f"o trecho não está dentro de {funcao}()")
+
+    def test_arquivos_do_guia_existem(self):
+        texto = (PASTA_AERO / "explicacoes.js").read_text(encoding="utf-8")
+        for caminho in re.findall(r'\["((?:src/|servidor|Dockerfile|docker-compose)[^" ]*)', texto):
+            with self.subTest(caminho=caminho):
+                self.assertTrue((self.RAIZ / caminho).exists(), caminho)
 
 
 if __name__ == "__main__":

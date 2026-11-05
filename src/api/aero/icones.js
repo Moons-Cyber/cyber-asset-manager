@@ -18,7 +18,7 @@ const Icones = (() => {
       <g stroke="#e8f6ff" stroke-width="1.2" stroke-linecap="round" opacity=".85"><path d="M13 6.8h11M13 16h11M13 25.2h11"/></g>
       <path d="M5 4.6h22" stroke="#fff" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round"/></svg>`,
 
-    surto: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>${bolaVidro("ic-s", "#e9f7ff", "#4aa6f6", "#0a49b8")}</defs>
+    rede: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>${bolaVidro("ic-s", "#e9f7ff", "#4aa6f6", "#0a49b8")}</defs>
       <circle cx="16" cy="16" r="13.5" fill="url(#ic-s)" stroke="#06358f" stroke-width=".9"/>
       <g stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".9"><path d="M10 20.5L16 10M16 10L22.5 20M10 20.5H22.5"/></g>
       <g fill="#fff" stroke="#06358f" stroke-width=".6"><circle cx="10" cy="20.5" r="2.4"/><circle cx="16" cy="10" r="2.4"/></g>
@@ -31,10 +31,6 @@ const Icones = (() => {
       <polyline points="6.5,14 11,14 13,9.5 16,18 18.5,12 20,14 25.5,14" fill="none" stroke="#8dff72" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
       <rect x="10" y="24.5" width="12" height="3.2" rx="1.2" fill="#9fb4d4" stroke="#06358f" stroke-width=".7"/><path d="M16 22v2.6" stroke="#06358f" stroke-width="1.4"/>
       <path d="M5 6h22v6C20 11 12 11 5 12z" fill="#fff" opacity=".22"/></svg>`,
-
-    ajuda: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>${bolaVidro("ic-h", "#e9f7ff", "#4aa6f6", "#0a49b8")}</defs>
-      <circle cx="16" cy="16" r="13.5" fill="url(#ic-h)" stroke="#06358f" stroke-width=".9"/>
-      <text x="16" y="23.5" text-anchor="middle" font-family="Trebuchet MS, Tahoma, sans-serif" font-weight="700" font-size="21" fill="#fff" stroke="#06358f" stroke-width=".6">?</text>${BRILHO(12, 7, 7.5, 3.6)}</svg>`,
 
     orbe: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>${bolaVidro("ic-o", "#eaffdc", "#5fd048", "#1c7a1a")}</defs>
       <circle cx="16" cy="16" r="14" fill="url(#ic-o)" stroke="#145a10" stroke-width=".9"/>
@@ -73,10 +69,18 @@ const Icones = (() => {
       <circle cx="16" cy="16" r="13.5" fill="url(#ic-k)" stroke="#145a10" stroke-width=".9"/>
       <path d="M9.500 16.500l4.500 4.500 8.500-10" fill="none" stroke="#fff" stroke-width="3.200" stroke-linecap="round" stroke-linejoin="round"/>${BRILHO(12, 7, 7.500, 3.600, 0.4)}</svg>`,
 
-    pixel: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="28" height="28" rx="3" fill="#1a1c2c" stroke="#06358f"/>
-      <g shape-rendering="crispEdges"><rect x="6" y="6" width="6" height="6" fill="#a7f070"/><rect x="14" y="6" width="6" height="6" fill="#38b764"/><rect x="22" y="14" width="6" height="6" fill="#ef7d57"/>
-        <rect x="6" y="14" width="6" height="6" fill="#41a6f6"/><rect x="14" y="22" width="6" height="6" fill="#ffcd75"/><rect x="6" y="22" width="6" height="6" fill="#b13e53"/></g></svg>`,
+    gota: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>
+        <radialGradient id="ic-g" cx=".38" cy=".42" r=".75"><stop offset="0" stop-color="#e6f7ff"/><stop offset=".45" stop-color="#56b4ff"/><stop offset="1" stop-color="#0a4fc4"/></radialGradient></defs>
+      <path d="M16 1.8C16 1.8 5.2 14.2 5.2 20.6a10.8 10.8 0 0 0 21.6 0C26.8 14.2 16 1.8 16 1.8z" fill="url(#ic-g)" stroke="#06358f" stroke-width=".9" stroke-linejoin="round"/>
+      <g class="olhos"><ellipse cx="12.4" cy="19.2" rx="2.1" ry="2.6" fill="#fff"/><ellipse cx="19.6" cy="19.2" rx="2.1" ry="2.6" fill="#fff"/>
+        <circle cx="12.9" cy="19.8" r="1.2" fill="#0b2a66"/><circle cx="20.1" cy="19.8" r="1.2" fill="#0b2a66"/></g>
+      <path d="M13 24.6q3 2.2 6 0" fill="none" stroke="#0b2a66" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="11.6" cy="12" rx="2.2" ry="4" fill="#fff" opacity=".55" transform="rotate(25 11.6 12)"/></svg>`,
+
+    codigo: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2.5" y="4.5" width="27" height="23" rx="2.5" fill="#fbfbf6" stroke="#06358f"/>
+      <rect x="2.5" y="4.5" width="27" height="5" rx="2.5" fill="#2f74e6"/>
+      <path d="M11 14l-4 4 4 4M21 14l4 4-4 4M18 12.5l-4 11" fill="none" stroke="#0a3fb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 
     janelas: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>
         <linearGradient id="ic-j" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ec2ff"/><stop offset="1" stop-color="#1a58d8"/></linearGradient></defs>

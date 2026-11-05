@@ -1,0 +1,14 @@
+{
+    "entradas": [
+        {
+            "t": 1793839241,
+            "motivo": "inicialização",
+            "ativos": 5,
+            "dependencias": 0,
+            "risco_global": 56.6,
+            "invertivel": true,
+            "condicao": 1.0,
+            "erro": null
+        }
+    ]
+}

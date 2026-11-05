@@ -49,6 +49,7 @@ def construir_matriz_incidencia(ativos):
                 indices[chave] = len(rotulos)
                 rotulos.append(
                     {
+                        "id": vulnerabilidade.id,
                         "descricao": vulnerabilidade.descricao,
                         "categoria": vulnerabilidade.categoria,
                         "severidade": float(vulnerabilidade.severidade),
@@ -301,3 +302,45 @@ def calcular_risco_efetivo(ativos, dependencias):
         }
         for indice, ativo in enumerate(ativos)
     ]
+
+
+def explicar_calculo(ativos, dependencias):
+    """Todas as etapas de (I - A)x = b com os números, para o Assistente mostrar.
+
+    Usa as MESMAS funções do cálculo oficial (nada é recalculado de outro
+    jeito). Se I - A não for invertível, devolve as etapas até o diagnóstico
+    e x = None, em vez de erro: o Assistente explica por que parou.
+    """
+    matriz_incidencia, severidades, rotulos = construir_matriz_incidencia(ativos)   # M e v
+    soma_das_notas = multiplicar_matriz_vetor(matriz_incidencia, severidades)        # M v
+    fatores = [float(ativo.obter_fator_exposicao()) for ativo in ativos]             # diagonal de F
+    riscos_proprios = [f * s for f, s in zip(fatores, soma_das_notas)]                # b = F (M v)
+    matriz_dependencias = construir_matriz_dependencias(ativos, dependencias)        # A
+    sistema = np.eye(len(ativos)) - np.asarray(matriz_dependencias, dtype=float)     # I - A
+
+    diagnostico = _diagnosticar(sistema) if ativos else None
+    riscos_efetivos = None
+    residuo = None
+    if diagnostico is not None and diagnostico["invertivel"]:
+        x = np.linalg.solve(sistema, np.asarray(riscos_proprios, dtype=float))
+        riscos_efetivos = x.tolist()
+        residuo = float(np.max(np.abs(sistema @ x - np.asarray(riscos_proprios))))
+
+    return {
+        "ativos": [
+            {"id": a.id, "nome": a.nome, "tipo": a.obter_tipo(), "fator": fatores[i]}
+            for i, a in enumerate(ativos)
+        ],
+        "vulnerabilidades": rotulos,
+        "M": matriz_incidencia,
+        "v": severidades,
+        "Mv": soma_das_notas,
+        "b": riscos_proprios,
+        "A": matriz_dependencias,
+        "somas_recebidas": [math.fsum(linha) for linha in matriz_dependencias],
+        "I_menos_A": sistema.tolist(),
+        "diagnostico": diagnostico,
+        "x": riscos_efetivos,
+        "residuo": residuo,
+        "risco_global": None if riscos_efetivos is None else math.fsum(riscos_efetivos),
+    }

@@ -6,7 +6,7 @@ A partir dessas informações, o programa usa **álgebra linear** para diagnosti
 
 O sistema pode ser usado de três jeitos, todos sobre o mesmo núcleo:
 
-* **Interface web Surto** (`/surto`): o risco da rede mostrado como uma epidemia em pixel art, com cadastro completo de ativos, falhas e dependências.
+* **Interface web** (`/aero`): um desktop no estilo Windows XP, com o mapa da rede, o cadastro completo e um **Assistente** que explica a conta do risco com os seus dados e mostra onde cada parte está no código.
 * **API REST em Flask** (`servidor.py`): conversa em JSON; é o que roda no container Docker.
 * **Menu interativo no terminal** (`main.py`).
 
@@ -45,7 +45,7 @@ Com o [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalad
    e abra no navegador:
    ```text
    http://localhost:5000/api/saude     (a API respondendo)
-   http://localhost:5000/surto         (a interface web)
+   http://localhost:5000/aero          (a interface web)
    ```
 4. **Para desligar o servidor quando terminar:**
    ```bash
@@ -56,7 +56,7 @@ Com o [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalad
 > 💡 **Dica para servidores compartilhados ou uso avançado (`.env`):**  
 > Você pode criar um arquivo chamado `.env` na pasta do projeto para trocar a porta (`HOST_PORT=5000`), o nome do container (`CONTAINER_NAME=inventario-ativos`) ou adicionar uma chave gratuita do NVD (`NVD_API_KEY=sua_chave`) para deixar as consultas de vulnerabilidades mais rápidas.
 
-> 🔒 **Por segurança, a porta só é publicada em `127.0.0.1`** (o próprio computador). Num servidor remoto, para ver a interface no seu navegador, abra um túnel SSH e acesse `http://127.0.0.1:5000/surto` no seu PC:
+> 🔒 **Por segurança, a porta só é publicada em `127.0.0.1`** (o próprio computador). Num servidor remoto, para ver a interface no seu navegador, abra um túnel SSH e acesse `http://127.0.0.1:5000/aero` no seu PC:
 > ```bash
 > ssh -L 5000:127.0.0.1:5000 SEU_USUARIO@ENDERECO_DO_SERVIDOR
 > ```
@@ -95,67 +95,42 @@ Com o [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalad
      ```bash
      python servidor.py
      ```
-     Depois abra `http://localhost:5000/surto` no navegador.
+     Depois abra `http://localhost:5000/aero` no navegador.
 
 ### Quer ver a interface com dados de exemplo?
 A pasta `dados_ficticios/` traz uma rede de exemplo (10 ativos e 11 dependências). Para não misturar com os seus dados reais, aponte o servidor para ela:
 
-* **Windows (PowerShell):**
-  ```powershell
-  python ferramentas\gerar_diario_ficticio.py dados_ficticios
-  $env:DADOS_DIR="dados_ficticios"; python servidor.py
-  ```
-* **Linux ou Mac:**
-  ```bash
-  python ferramentas/gerar_diario_ficticio.py dados_ficticios
-  DADOS_DIR=dados_ficticios python servidor.py
-  ```
-
-O primeiro comando é opcional: ele cria um diário de 24 horas **fictício**, só para a aba "Diário 24h" ter o que mostrar. Nunca rode ele na pasta de dados do teste real.
+* **Windows (PowerShell):** `$env:DADOS_DIR="dados_ficticios"; python servidor.py`
+* **Linux ou Mac:** `DADOS_DIR=dados_ficticios python servidor.py`
 
 ### Configurações por variável de ambiente
 
 | Variável | Para que serve | Padrão |
 | :--- | :--- | :--- |
-| `DADOS_DIR` | Pasta onde ficam `ativos.json`, `dependencias.json`, `cache_cve.json` e `diario_surto.json` | pasta atual (no Docker: `/dados`) |
+| `DADOS_DIR` | Pasta onde ficam `ativos.json`, `dependencias.json`, `cache_cve.json` e `diario.json` | pasta atual (no Docker: `/dados`) |
 | `HOST` / `PORT` | Endereço e porta do servidor de desenvolvimento | `127.0.0.1` / `5000` |
 | `NVD_API_KEY` | Chave gratuita do NVD (consultas mais rápidas) | vazia |
-| `SURTO_INTERVALO_S` | Segundos entre as simulações anotadas no diário (`0` = só ao ligar, `-1` = desliga) | `3600` (1 hora) |
-| `SURTO_MAX_ENTRADAS` | Máximo de anotações guardadas no diário | `1000` |
+| `DIARIO_INTERVALO_S` | Segundos entre os cálculos anotados no diário (`0` = só ao ligar, `-1` = desliga) | `3600` (1 hora) |
+| `DIARIO_MAX_ENTRADAS` | Máximo de anotações guardadas no diário | `1000` |
 
 ---
 
-## 🦠 A interface web: Surto
+## 🫧 A interface web
 
-Abra `http://localhost:5000/surto`. A página não baixa nada da internet (fonte, desenhos e sons estão no próprio projeto), então funciona até num servidor sem acesso externo.
-
-| Aba | O que faz |
-| :--- | :--- |
-| **Surto** | A rede vira uma cidade em pixel art: cada prédio é um ativo, cada estrada é uma dependência. Ao apertar **Iniciar surto**, milhares de epidemias são sorteadas e a média delas vai se aproximando do risco calculado pela álgebra linear. Ao lado ficam o **R0** (raio espectral), o gráfico *sorteio × álgebra*, a tabela ativo por ativo e a matriz A com o diagnóstico. Embaixo, a **Defesa** ordena as correções que mais derrubam o risco global; o botão **Corrigir** grava de verdade pela API (e **Desfazer** volta). |
-| **Ativos** | Cadastro completo: criar, editar e excluir ativos; adicionar falhas (com ou sem CVE) e mudar o status; criar e remover dependências. |
-| **Diário 24h** | Uma simulação por hora, gravada pelo próprio servidor. É a prova de que o container ficou no ar: hora sem marca = servidor fora do ar. |
-| **Como funciona** | A explicação da matemática em linguagem simples. |
-
-Atalhos na aba Surto: `espaço` inicia/pausa, `R` zera. O controle **Pesos** multiplica todos os pesos **só na simulação** (os dados não mudam), para mostrar o surto explodindo quando o R0 passa de 1. O som 8-bit começa desligado.
-
----
-
-## 🫧 Tema alternativo: Aero (estilo Windows XP)
-
-A mesma API tem uma segunda interface, em `/aero` (ex.: `http://127.0.0.1:5000/aero`): um desktop
-no estilo Frutiger Aero / Windows XP, com janelas arrastáveis, barra de tarefas, menu iniciar e uma
-bandeja que mostra se o serviço está no ar. Os ícones e o fundo foram desenhados do zero (SVG/canvas),
-usa só fontes do sistema e funciona sem internet.
+Abra `http://localhost:5000/aero`. É um desktop no estilo Frutiger Aero / Windows XP, com janelas arrastáveis, barra de tarefas, menu iniciar e um escudo na bandeja que mostra se o serviço está no ar. Os ícones, o fundo e o mascote foram desenhados do zero (SVG e canvas); a página usa só fontes do sistema e não baixa nada da internet, então funciona até num servidor sem acesso externo.
 
 | Janela | O que faz |
-|---|---|
-| Varredura de Contágio | O mapa do surto, o R0, sorteio × álgebra e o ranking de defesa (botão Corrigir) |
-| Gerenciador de Ativos | Novo / Editar / Excluir, falhas de cada ativo e aba de dependências |
-| Monitor do Serviço | Saúde da API e as 24 horas do diário |
-| Central de Ajuda | A matemática explicada passo a passo |
+| :--- | :--- |
+| **Mapa da Rede** | Cada ativo é uma esfera com a cor do risco efetivo; os canos são as dependências, com o peso. Clicando numa esfera, aparece de onde vem o risco dela (risco próprio + o que chega de cada vizinho). |
+| **Gerenciador de Ativos** | Cadastro completo: **Novo**, **Editar** e **Excluir** ativos; adicionar falhas (com ou sem CVE) e mudar o status; criar e remover dependências. |
+| **Monitor do Serviço** | A saúde da API e o diário das 24 horas: uma marca por hora em que o servidor esteve no ar. |
+| **Assistente** | A **Gota**, no canto da tela. Fica quieta até ser chamada (só oferece um tour na primeira visita) e responde: como o risco é calculado, por que um ativo tem aquele risco, **o que é uma falha e como prevenir**, o que é a verificação de invertibilidade, como cadastrar, e onde cada parte está no código. |
 
-O tema Pixel Art continua em `/surto`; o menu iniciar (Aero) e o link "Tema Aero" (Pixel Art) alternam entre os dois.
-No celular, as janelas abrem em tela cheia.
+O passo a passo do cálculo é um assistente no estilo do XP (**Voltar** / **Avançar**) que refaz a conta com os dados cadastrados naquele momento, usando a rota `/api/risco/passos`. Cada passo tem uma caixa **No código** com o arquivo, a função e a linha que fazem aquilo; um teste automatizado confere que essas linhas existem mesmo no código.
+
+O **Assistente de Segurança** explica uma falha cadastrada (botão **Explicar** no Gerenciador, link "o que é?" no Mapa, ou pela Gota) em quatro passos: o que ela é, por que é perigosa naquele tipo de ativo, como prevenir e o que fazer agora, com botões para marcar a falha como *Em tratamento* ou *Corrigida*. Ele reconhece 15 tipos de falha (injeção de SQL, XSS, execução remota, senha padrão, software desatualizado, entre outros), cada um com a referência CWE, por palavras-chave na categoria, na descrição ou no texto do NVD. Tudo funciona sem internet: os textos ficam em `src/servicos/orientacao_seguranca.py`. As orientações são gerais para o tipo de falha; a correção exata de um CVE está no boletim do fornecedor.
+
+No celular, as janelas abrem em tela cheia e o Assistente fica no ícone da área de trabalho e no menu iniciar.
 
 ## 🧮 A matemática do risco (resumo)
 
@@ -168,8 +143,6 @@ No celular, as janelas abrem em tela cheia.
 
    Depois, coloca `x` de volta na equação e compara `(I − A)·x` com `b` usando `allclose`. No código, o produto de matrizes é `@`: em NumPy, `*` multiplicaria elemento a elemento.
 4. **Por que a soma dos pesos recebidos precisa ser menor que 1:** isso dá à matriz `I − A` dominância diagonal estrita, o que garante que ela é invertível. A soma precisa ficar abaixo de 1 com uma folga de `1e-9`, porque em ponto flutuante `0,7 + 0,2 + 0,1` dá `0,9999999999999999`, e uma comparação exata deixaria passar uma linha que na verdade soma 1. O fator de exposição multiplica só `b`: ele não altera `A`, então não muda a invertibilidade nem o número de condição.
-5. **A mesma conta como epidemia:** `x = b + A·b + A²·b + …`. Cada infecção atravessa cada dependência com probabilidade igual ao peso; a média de muitas epidemias sorteadas (método de Monte Carlo) chega no mesmo `x`. A série só termina quando o **raio espectral ρ(A)** — o R0 do surto — é menor que 1.
-6. **Defesa:** corrigir uma falha de nota `s` no ativo `i` derruba o risco global em `fator_i × s × multiplicador_i`, em que o multiplicador é a soma da coluna `i` de `(I − A)⁻¹`.
 
 ---
 
@@ -182,7 +155,7 @@ Basta abrir o Google Chrome, Edge ou Firefox e colar qualquer um dos endereços 
 
 | O que você quer ver | Endereço para colar no Navegador | O que aparece na tela |
 | :--- | :--- | :--- |
-| **Interface web** | `http://localhost:5000/surto` | A interface Surto (veja a seção acima). |
+| **Interface web** | `http://localhost:5000/aero` | O desktop com o Mapa, o cadastro e o Assistente (veja a seção acima). |
 | **Página inicial da API** | `http://localhost:5000/` | Mostra o nome do serviço e os atalhos de saúde e da interface. |
 | **Saúde do sistema** | `http://localhost:5000/api/saude` | Confirma se os arquivos estão íntegros e quantos ativos existem. |
 | **Tipos de equipamentos** | `http://localhost:5000/api/tipos` | Lista os códigos de tipos aceitos e qual campo extra cada um pede. |
@@ -195,8 +168,10 @@ Basta abrir o Google Chrome, Edge ou Firefox e colar qualquer um dos endereços 
 | **Consultar um CVE oficial** | `http://localhost:5000/api/cve/CVE-2021-44228` | Busca a nota de gravidade e descrição direto na base mundial NVD. |
 | **Listar dependências** | `http://localhost:5000/api/dependencias` | Mostra quais equipamentos dependem uns dos outros. |
 | **Relatório de Risco Geral** | `http://localhost:5000/api/risco` | Calcula o risco efetivo de cada equipamento e o diagnóstico da rede. |
-| **Surto (álgebra × sorteio)** | `http://localhost:5000/api/surto` | Matriz A, vetor b, solução do `solve`, R0, resultado do Monte Carlo e ranking de correções. Aceita `?escala=` (0,1 a 6), `?rodadas=` (100 a 20000) e `?semente=`. |
-| **Diário do surto** | `http://localhost:5000/api/surto/diario` | As anotações de hora em hora (responde 404 se o diário estiver desligado). |
+| **Como prevenir uma falha** | `http://localhost:5000/api/ativos/1/vulnerabilidades/ID_DA_FALHA/orientacao` | O que é a falha, por que é perigosa, como prevenir e quanto o risco cai se ela for corrigida. |
+| **Cálculo passo a passo** | `http://localhost:5000/api/risco/passos` | Cada etapa da conta: `M`, `v`, `b`, `A`, `I − A`, o diagnóstico e o `x`. É o que o Assistente usa. |
+| **Ordenar ativos** | `http://localhost:5000/api/ativos?ordem=nome&sentido=desc` | Ordena por `nome`, `id`, `setor`, `responsavel` ou `falhas` (padrão Strategy). |
+| **Diário das 24 horas** | `http://localhost:5000/api/diario` | As anotações de hora em hora (responde 404 se o diário estiver desligado). |
 
 ---
 
@@ -290,13 +265,13 @@ Agora basta abrir no navegador `http://localhost:5000/api/risco` para ver o cál
 
 ## 🧪 Passo 4: Como rodar os Testes Automatizados
 
-O projeto possui uma pasta `testes` com **227 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
+O projeto possui uma pasta `testes` com **244 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
 
 ```bash
 python -m unittest discover -s testes -t .
 ```
 
-Entre eles, `test_contagio.py` confere que a média das epidemias sorteadas chega no resultado do `np.linalg.solve`, e que a queda prevista pelo ranking de defesa bate com o recálculo completo.
+Entre eles, `test_passos.py` confere o cálculo etapa por etapa contra uma conta feita à mão, e `test_aero.py` confere que cada trecho de código citado pelo Assistente existe mesmo no arquivo e na função que ele diz.
 
 ---
 
@@ -317,7 +292,7 @@ Entre eles, `test_contagio.py` confere que a média das epidemias sorteadas cheg
    ```bash
    docker inspect -f '{{.State.StartedAt}} reinícios={{.RestartCount}}' inventario-ativos
    ```
-6. No fim, a aba **Diário 24h** da interface mostra uma marca por hora em que o servidor esteve no ar.
+6. No fim, o **Monitor do Serviço** da interface mostra uma marca por hora em que o servidor esteve no ar.
 
 O container reinicia sozinho se cair (`restart: unless-stopped`), os dados ficam no volume e toda gravação é atômica (um arquivo temporário substitui o antigo de uma vez só). Ele roda **um processo com 8 threads** de propósito: os ativos ficam num dicionário em memória, e vários processos teriam cópias diferentes dos dados.
 
@@ -344,32 +319,39 @@ cyber-asset-manager/
 │
 ├── src/
 │   ├── api/
-│   │   ├── aplicacao.py         # Rotas REST (Flask), validações e o diário do surto
-│   │   └── surto/               # Interface web (HTML, CSS e JavaScript, sem dependências externas)
-│   │       ├── index.html       #   estrutura das 4 abas
-│   │       ├── surto.css        #   visual (paleta Sweetie 16, bordas "pixeladas")
-│   │       ├── pixel.js         #   fonte 3x5 e sprites em pixel art
-│   │       ├── simulacao.js     #   a epidemia sorteada no navegador
-│   │       ├── app.js           #   cidade animada, painel da prova, ranking e diário
-│   │       ├── ativos.js        #   cadastro (CRUD) de ativos, falhas e dependências
-│   │       └── som.js           #   som 8-bit sintetizado
+│   │   ├── aplicacao.py         # Rotas REST (Flask), validações e o diário
+│   │   └── aero/                # Interface web (HTML, CSS e JavaScript, sem dependências externas)
+│   │       ├── index.html       #   o desktop: papel de parede, barra de tarefas e menu iniciar
+│   │       ├── aero.css         #   visual (vidro, gradientes, janelas no estilo XP)
+│   │       ├── nucleo.js        #   chamadas à API e dados compartilhados
+│   │       ├── janelas.js       #   abrir, arrastar, minimizar e fechar janelas; diálogos
+│   │       ├── icones.js        #   ícones desenhados em SVG (e a Gota)
+│   │       ├── desenho.js       #   desenho do mapa em canvas
+│   │       ├── app_mapa.js      #   Mapa da Rede
+│   │       ├── app_ativos.js    #   Gerenciador de Ativos (CRUD)
+│   │       ├── app_monitor.js   #   Monitor do Serviço e diário
+│   │       ├── explicacoes.js   #   o que o Assistente explica (cálculo, guia e código)
+│   │       ├── app_assistente.js #  a Gota: menu, tour e o passo a passo
+│   │       └── desktop.js       #   ícones, menu iniciar, bandeja e tela de entrada
 │   ├── modelos/                 # Classes de Ativo, Vulnerabilidade, Dependência e Enums
-│   ├── persistencia/            # Leitura/gravação atômica em JSON e erros de arquivo (ErroDados)
+│   ├── persistencia/            # JSON com gravação atômica, Factory (fabrica_ativos.py) e Repository (repositorio.py)
 │   └── servicos/
-│       ├── analise_risco.py     # Monta M, v, F e A; resolve (I − A)x = b e diagnostica
-│       ├── contagio.py          # Monte Carlo, raio espectral, multiplicadores e ranking de defesa
-│       ├── diario_surto.py      # Anotação periódica do surto (prova das 24 h)
+│       ├── analise_risco.py     # Monta M, v, F e A; resolve (I − A)x = b, diagnostica e explica as etapas
+│       ├── diario.py            # Anotação periódica do risco (prova das 24 h)
+│       ├── ordenacao.py         # Critérios de ordenação (padrão Strategy)
+│       ├── orientacao_seguranca.py # O que é cada tipo de falha e como prevenir (CWE)
 │       ├── cliente_nvd.py       # Consulta ao NVD com cache e limite de requisições
 │       ├── gerenciador_*.py     # Cadastro de ativos e de dependências
 │       └── consultas.py         # Consultas com map, filter, sorted e reduce
 │
-├── testes/                      # 227 testes automatizados do sistema e da API
+├── testes/                      # 244 testes automatizados do sistema e da API
 ├── scripts/                     # verificar_servico.py: verificação e monitoramento de 24 h
-├── ferramentas/                 # gerar_diario_ficticio.py: diário de exemplo para a interface
+├── docs/                        # API.md (rotas REST) e PADROES.md (padrões de projeto)
+├── postman/                     # coleção Postman com testes de integração
 └── dados_ficticios/             # Rede de exemplo para visualizar a interface (fora do Git)
 ```
 
-Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json` e `diario_surto.json`) são criados pelo próprio programa durante o uso, ficam na pasta de `DADOS_DIR` (no Docker, dentro do volume) e não devem ir para o repositório.
+Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json` e `diario.json`) são criados pelo próprio programa durante o uso, ficam na pasta de `DADOS_DIR` (no Docker, dentro do volume) e não devem ir para o repositório.
 
 ---
 
@@ -383,7 +365,8 @@ Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json` e `di
 
 ## 🗺️ Próximas Melhorias (Roadmap)
 
-- [x] **Interface Web Completa (Front-end):** interface Surto consumindo as rotas do `aplicacao.py`.
-- [x] **Visualização de Grafos de Dependência:** a rede desenhada como cidade, com o diagnóstico de `/api/risco` e o R0.
+- [x] **Interface Web Completa (Front-end):** desktop no estilo Windows XP consumindo as rotas do `aplicacao.py`.
+- [x] **Visualização de Grafos de Dependência:** o Mapa da Rede, com o risco efetivo de cada ativo.
+- [x] **Assistente explicativo:** o cálculo passo a passo com os dados reais e o mapa do código.
 - [ ] **Autenticação na API:** exigir login ou chave para alterar dados.
 - [ ] **Exportar relatórios:** baixar o risco e o diário em CSV pela interface.

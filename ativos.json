@@ -83,5 +83,14 @@
             }
         ],
         "sgbd": "PostgreeSQL"
+    },
+    {
+        "id": 5,
+        "tipo": "Notebook",
+        "nome": "Notebook gamer",
+        "responsavel": "Nicoly",
+        "setor": "TI",
+        "vulnerabilidades": [],
+        "memoria_ram": "16GB"
     }
 ]

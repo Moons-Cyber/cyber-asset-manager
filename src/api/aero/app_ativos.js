@@ -192,7 +192,7 @@ const AppAtivos = (() => {
 
     const tabela = a.vulnerabilidades.length
       ? el("div", { class: "caixa-lista" }, el("table", { class: "lista" },
-          el("thead", {}, el("tr", {}, ["Falha", "Nota", "Gravidade", "Status", "Descrição"].map((t, k) => el("th", { scope: "col", class: k === 1 ? "num" : null }, t)))),
+          el("thead", {}, el("tr", {}, ["Falha", "Nota", "Gravidade", "Status", "Descrição", ""].map((t, k) => el("th", { scope: "col", class: k === 1 ? "num" : null }, t)))),
           el("tbody", {}, a.vulnerabilidades.map((v) => el("tr", {},
             el("td", {}, v.id), el("td", { class: "num" }, num(v.severidade, 1)), el("td", {}, v.classificacao),
             el("td", {}, el("select", {
@@ -203,7 +203,11 @@ const AppAtivos = (() => {
                 `${v.id}: ${e.target.value}.`),
               },
             }, dados.status.map((st) => el("option", { value: st, selected: st === v.status }, st)))),
-            el("td", {}, v.descricao_curta))))))
+            el("td", {}, v.descricao_curta),
+            el("td", {}, el("button", {
+              type: "button", class: "botao pequeno", title: "O que é esta falha e como prevenir",
+              on: { click: () => AppAssistente.explicarFalha(a.id, v.id) },
+            }, "Explicar")))))))
       : el("p", { class: "vazio" }, "Este ativo não tem falhas registradas.");
 
     return el("div", {},
@@ -312,11 +316,13 @@ const AppAtivos = (() => {
     return raiz;
   }
 
-  function abrir() {
-    if (ui) { Janelas.focar("ativos"); return; }
+  /** Abre o Gerenciador; com `id`, já deixa esse ativo selecionado (vindo do Mapa). */
+  function abrir(id) {
+    if (typeof id === "number") { s.aba = "ativos"; s.sel = id; }
+    if (ui) { Janelas.focar("ativos"); desenhar(); return; }
     const conteudo = construir();
     s.desinscrever = Nucleo.assinar(() => {
-      // Atualização vinda de fora (ex.: corrigir falha na tela do Surto): não atrapalha quem está digitando.
+      // Atualização vinda de outra janela: não atrapalha quem está digitando.
       const f = document.activeElement;
       const digitando = ui && f && ui.painel.contains(f) && f.matches("input, textarea");
       if (!digitando) desenhar();

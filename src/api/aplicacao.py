@@ -22,12 +22,14 @@ from src.modelos.vulnerabilidades import (
     resumir,
 )
 from src.persistencia.erros import ErroDados
+from src.servicos.ordenacao import ordenar
 from src.servicos.analise_risco import (
     calcular_risco_efetivo,
     diagnosticar_sistema,
+    explicar_calculo,
 )
-from src.servicos.contagio import analisar_surto
-from src.servicos.diario_surto import (
+from src.servicos.orientacao_seguranca import efeito_no_risco, orientar
+from src.servicos.diario import (
     MAX_ENTRADAS_PADRAO,
     Diario,
     GravadorPeriodico,
@@ -158,30 +160,14 @@ def _ativo_para_json(ativo):
 # ---------------------------------------------------------------------------
 # Fábrica da aplicação
 # ---------------------------------------------------------------------------
-PASTA_SURTO = Path(__file__).parent / "surto"
-# Só estes arquivos são servidos em /surto/<nome>; qualquer outro nome dá 404.
-ARQUIVOS_SURTO = {"surto.css", "pixel.js", "simulacao.js", "app.js", "ativos.js", "som.js"}
-
-# Tema alternativo (Frutiger Aero / "Windows XP"): mesma API, outra interface.
+# Interface web (Frutiger Aero / "Windows XP"): só fala com a API REST.
 PASTA_AERO = Path(__file__).parent / "aero"
+# Só estes arquivos são servidos em /aero/<nome>; qualquer outro nome dá 404.
 ARQUIVOS_AERO = {
-    "aero.css", "nucleo.js", "icones.js", "janelas.js", "app_ativos.js",
-    "app_surto.js", "app_monitor.js", "app_ajuda.js", "desktop.js",
+    "aero.css", "nucleo.js", "icones.js", "janelas.js", "desenho.js",
+    "app_ativos.js", "app_mapa.js", "app_monitor.js", "explicacoes.js",
+    "app_assistente.js", "desktop.js",
 }
-
-
-def _parametro(nome, padrao, minimo, maximo, tipo=float):
-    """Lê ?nome=valor da URL, com faixa permitida; erro 400 se inválido."""
-    bruto = request.args.get(nome)
-    if bruto is None or bruto == "":
-        return padrao
-    try:
-        valor = tipo(bruto)
-    except ValueError:
-        raise ErroApi(f"Parâmetro '{nome}' inválido.") from None
-    if not (minimo <= valor <= maximo) or (tipo is float and not math.isfinite(valor)):
-        raise ErroApi(f"Parâmetro '{nome}' deve estar entre {minimo} e {maximo}.")
-    return valor
 
 
 def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
@@ -191,10 +177,10 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
     pasta_dados: onde ficam ativos.json, dependencias.json e cache_cve.json.
                  No Docker, aponte para o volume.
     cliente_nvd: permite injetar um cliente falso nos testes.
-    diario_intervalo: None desliga o diário do surto (padrão, usado nos
+    diario_intervalo: None desliga o diário (padrão, usado nos
                  testes); 0 anota só ao ligar; N > 0 anota também a cada
                  N segundos, numa thread de fundo.
-    diario_max: máximo de entradas guardadas no diario_surto.json.
+    diario_max: máximo de entradas guardadas no diario.json.
     """
     pasta = Path(pasta_dados)
     pasta.mkdir(parents=True, exist_ok=True)
@@ -221,13 +207,13 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
                 return funcao(*args, **kwargs)
         return interna
 
-    # ------------------------------------------------- diário do surto (24 h)
+    # ------------------------------------------------------- diário (24 h)
     diario = None
     if diario_intervalo is not None:
-        diario = Diario(pasta / "diario_surto.json", diario_max or MAX_ENTRADAS_PADRAO)
+        diario = Diario(pasta / "diario.json", diario_max or MAX_ENTRADAS_PADRAO)
 
-    def anotar_surto(motivo):
-        """Roda um surto e anota no diário. Nunca levanta exceção."""
+    def anotar_diario(motivo):
+        """Calcula o risco e anota no diário. Nunca levanta exceção."""
         if diario is None:
             return
         try:
@@ -239,15 +225,15 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
                 )
             diario.adicionar(entrada)
         except Exception:                       # o diário nunca derruba a API
-            app.logger.exception("Falha ao anotar o surto")
+            app.logger.exception("Falha ao anotar o diário")
 
     app.extensions["diario"] = diario
-    app.extensions["anotar_surto"] = anotar_surto
+    app.extensions["anotar_diario"] = anotar_diario
     app.extensions["gravador_diario"] = None
     if diario is not None:
-        anotar_surto("inicialização")
+        anotar_diario("inicialização")
         if diario_intervalo > 0:
-            gravador = GravadorPeriodico(anotar_surto, diario_intervalo)
+            gravador = GravadorPeriodico(anotar_diario, diario_intervalo)
             gravador.iniciar()
             app.extensions["gravador_diario"] = gravador
 
@@ -354,8 +340,7 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
         return jsonify({
             "servico": "Inventário de ativos",
             "saude": "/api/saude",
-            "interface": "/surto",
-            "interface_aero": "/aero",
+            "interface": "/aero",
         })
 
     @app.get("/api/saude")
@@ -411,6 +396,16 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
             except (ValueError, KeyError):
                 raise ErroApi("Parâmetro 'tipo' inválido.") from None
             ativos = [a for a in ativos if isinstance(a, classe)]
+
+        criterio = request.args.get("ordem", "").strip()
+        if criterio:
+            sentido = request.args.get("sentido", "asc").strip()
+            if sentido not in ("asc", "desc"):
+                raise ErroApi("Parâmetro 'sentido' inválido. Use asc ou desc.")
+            try:
+                ativos = ordenar(ativos, criterio, decrescente=sentido == "desc")
+            except ValueError as erro:
+                raise ErroApi(str(erro)) from None
 
         return jsonify([_ativo_para_json(a) for a in ativos])
 
@@ -555,6 +550,33 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
         )
         return jsonify(_vulnerabilidade_para_json(alvo))
 
+    @app.get("/api/ativos/<int:identificador>/vulnerabilidades/<id_vulnerabilidade>/orientacao")
+    @com_trava
+    def orientar_vulnerabilidade(identificador, id_vulnerabilidade):
+        """O que é a falha, por que é perigosa e como prevenir (usado pelo Assistente)."""
+        ativo = ativo_ou_404(identificador)
+        id_vulnerabilidade = normalizar_cve(id_vulnerabilidade) or id_vulnerabilidade
+        alvo = next(
+            (v for v in ativo.vulnerabilidades if v.id == id_vulnerabilidade), None
+        )
+        if alvo is None:
+            raise ErroApi(
+                f"O ativo não possui a vulnerabilidade {id_vulnerabilidade}.", 404
+            )
+
+        resposta = {
+            "ativo": {"id": ativo.id, "nome": ativo.nome, "tipo": TIPO_POR_CLASSE[type(ativo)].rotulo},
+            "vulnerabilidade": _vulnerabilidade_para_json(alvo),
+        }
+        resposta.update(orientar(ativo, alvo))
+        resposta["efeito_no_risco"] = efeito_no_risco(
+            gerenciador.listar_ativos(),
+            gerenciador_dependencias.listar_dependencias(),
+            ativo,
+            alvo,
+        )
+        return jsonify(_limpar(resposta))
+
     @app.get("/api/cve/<cve_id>")
     def pesquisar_cve(cve_id):
         """Prévia da nota de um CVE, para a interface mostrar antes de salvar."""
@@ -631,65 +653,35 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
 
         return jsonify(_limpar({"resultados": resultados, "diagnostico": diagnostico}))
 
-    # ------------------------------------------------------------ surto
-    @app.get("/api/surto")
+    @app.get("/api/risco/passos")
     @com_trava
-    def simular():
-        """Álgebra (solve) e Monte Carlo lado a lado, mais o ranking de defesa.
-
-        ?escala=1.0   multiplica todos os pesos SÓ na simulação (0.1 a 6)
-        ?rodadas=2000 epidemias sorteadas (100 a 20000)
-        ?semente=7    opcional: repete exatamente o mesmo sorteio
-        """
-        escala = _parametro("escala", 1.0, 0.1, 6.0)
-        rodadas = _parametro("rodadas", 2000, 100, 20000, int)
-        semente = _parametro("semente", None, 0, 2**32 - 1, int)
-
-        ativos = gerenciador.listar_ativos()
-        dependencias = gerenciador_dependencias.listar_dependencias()
-
+    def passos_do_risco():
+        """Cada etapa de (I - A)x = b com os números reais (usado pelo Assistente)."""
         try:
-            resultado = analisar_surto(ativos, dependencias, escala, rodadas, semente)
+            passos = explicar_calculo(
+                gerenciador.listar_ativos(),
+                gerenciador_dependencias.listar_dependencias(),
+            )
         except ValueError as erro:
             raise ErroApi(str(erro), 422) from erro
 
-        if resultado["diagnostico"] is not None:
-            resultado["diagnostico"] = dict(resultado["diagnostico"])
-            resultado["diagnostico"]["fragil"] = resultado["diagnostico"].pop("frágil")
+        if passos["diagnostico"] is not None:
+            passos["diagnostico"] = dict(passos["diagnostico"])
+            passos["diagnostico"]["fragil"] = passos["diagnostico"].pop("frágil")
+        return jsonify(_limpar(passos))
 
-        resultado["ativos"] = [
-            {
-                "id": a.id,
-                "nome": a.nome,
-                "tipo_codigo": TIPO_POR_CLASSE[type(a)].value,
-                "tipo_nome": TIPO_POR_CLASSE[type(a)].rotulo,
-                "fator": float(a.obter_fator_exposicao()),
-            }
-            for a in ativos
-        ]
-        resultado["dependencias"] = [d.para_dict() for d in dependencias]
-        return jsonify(_limpar(resultado))
-
-    @app.get("/api/surto/diario")
+    # ----------------------------------------------------------- diário
+    @app.get("/api/diario")
     def ler_diario():
         if diario is None:
-            raise ErroApi("O diário do surto está desligado neste servidor.", 404)
+            raise ErroApi("O diário está desligado neste servidor.", 404)
         return jsonify(_limpar({
             "intervalo_s": diario_intervalo,
             "agora": int(time.time()),
             "entradas": diario.listar(),
         }))
 
-    @app.get("/surto")
-    def pagina_surto():
-        return send_from_directory(PASTA_SURTO, "index.html")
-
-    @app.get("/surto/<nome>")
-    def arquivo_surto(nome):
-        if nome not in ARQUIVOS_SURTO:
-            raise ErroApi("Arquivo não encontrado.", 404)
-        return send_from_directory(PASTA_SURTO, nome)
-
+    # ------------------------------------------------------ interface web
     @app.get("/aero")
     def pagina_aero():
         return send_from_directory(PASTA_AERO, "index.html")
@@ -703,7 +695,7 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
     # Respostas da API são sempre dinâmicas: o navegador não deve reaproveitá-las.
     @app.after_request
     def nao_guardar_em_cache(resposta):
-        if request.path.startswith(("/api/", "/surto", "/aero")):
+        if request.path.startswith(("/api/", "/aero")):
             resposta.headers["Cache-Control"] = "no-store"
         return resposta
 

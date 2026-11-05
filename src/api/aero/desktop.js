@@ -8,10 +8,10 @@
   const calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const PROGRAMAS = [
-    { id: "surto", titulo: "Varredura de Contágio", curto: "Surto", sub: "Risco se espalhando pela rede", icone: "surto", abrir: () => AppSurto.abrir() },
+    { id: "mapa", titulo: "Mapa da Rede", curto: "Mapa da Rede", sub: "Ativos, dependências e risco", icone: "rede", abrir: () => AppMapa.abrir() },
     { id: "ativos", titulo: "Gerenciador de Ativos", curto: "Ativos", sub: "Cadastro, falhas e dependências", icone: "ativos", abrir: () => AppAtivos.abrir() },
     { id: "monitor", titulo: "Monitor do Serviço", curto: "Monitor 24h", sub: "Saúde e diário do container", icone: "monitor", abrir: () => AppMonitor.abrir() },
-    { id: "ajuda", titulo: "Central de Ajuda", curto: "Como funciona", sub: "A matemática, passo a passo", icone: "ajuda", abrir: () => AppAjuda.abrir() },
+    { id: "assistente", titulo: "Assistente", curto: "Assistente", sub: "Explica a tela, a conta e o código", icone: "gota", abrir: () => AppAssistente.menu() },
   ];
 
   // ----------------------------------------------------------- papel de parede
@@ -51,11 +51,13 @@
       el("div", { class: "menu-colunas" },
         el("div", { class: "menu-esq" }, PROGRAMAS.map((p) => itemMenu(p.icone, p.titulo, p.sub, p.abrir))),
         el("div", { class: "menu-dir" },
+          itemMenu("pergunta", "Como o risco é calculado", null, () => AppAssistente.abrirCalculo()),
+          itemMenu("codigo", "Onde está no código", null, () => AppAssistente.abrirGuia("codigo")),
+          itemMenu("gota", "Fazer o tour", null, () => AppAssistente.tour()),
           itemMenu("info", "Sobre o projeto", null, sobre),
-          itemMenu("pixel", "Tema Pixel Art", null, () => { window.location.href = "/surto"; }),
           itemMenu("janelas", "Fechar janelas", null, () => Janelas.fecharTodas()))),
       el("div", { class: "menu-pe" },
-        itemMenu("pixel", "Voltar ao tema Pixel Art", null, () => { window.location.href = "/surto"; })));
+        itemMenu("gota", "Assistente: o que você quer saber?", null, () => AppAssistente.menu())));
   }
 
   function abrirMenu() {
@@ -135,7 +137,7 @@
 
   // ---------------------------------------------------------------- entrada
   async function entrar() {
-    $("boot-logo").append(Icones.criar("surto"));
+    $("boot-logo").append(Icones.criar("rede"));
     let jaViu = false;
     try { jaViu = sessionStorage.getItem("aero-boot") === "1"; } catch { /* sem armazenamento */ }
     const minimo = calmo || jaViu ? 0 : 1900;
@@ -162,6 +164,7 @@
       setTimeout(() => Nucleo.balao("Bem-vindo", `Serviço no ar com ${Nucleo.saude.ativos ?? 0} ativo(s). Use os ícones ou o menu iniciar.`, "info"), 500);
     }
     PROGRAMAS[0].abrir();
+    AppAssistente.iniciar();
     void saude;
   }
 

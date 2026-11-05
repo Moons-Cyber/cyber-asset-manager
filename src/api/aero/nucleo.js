@@ -64,7 +64,7 @@ const Nucleo = (() => {
     return frag;
   }
 
-  /** Faixa de cor do risco (as mesmas do tema pixel art). */
+  /** Faixa de cor do risco: verde, amarelo, laranja, vermelho. */
   function faixa(x) {
     if (x === null || x === undefined || !Number.isFinite(x)) return { classe: "neutro", rotulo: "sem dado" };
     if (x < 4) return { classe: "verde", rotulo: "baixo" };
