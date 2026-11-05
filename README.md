@@ -349,7 +349,6 @@ cyber-asset-manager/
 ├── testes/                      # 247 testes automatizados do sistema e da API
 ├── scripts/                     # verificar_servico.py: verificação e monitoramento de 24 h
 ├── docs/                        # API.md (rotas REST) e PADROES.md (padrões de projeto)
-├── postman/                     # coleção Postman com testes de integração
 └── dados_ficticios/             # Rede de exemplo para visualizar a interface (fora do Git)
 ```
 
