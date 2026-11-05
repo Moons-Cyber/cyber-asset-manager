@@ -122,6 +122,7 @@ Abra `http://localhost:5000/aero`. É um desktop no estilo Frutiger Aero / Windo
 | Janela | O que faz |
 | :--- | :--- |
 | **Mapa da Rede** | Cada ativo é uma esfera com a cor do risco efetivo; os canos são as dependências, com o peso. Clicando numa esfera, aparece de onde vem o risco dela (risco próprio + o que chega de cada vizinho). |
+| **Matrizes e Gráfico** | Mapa de calor da matriz de dependências **A** (cada quadradinho é o peso de um ativo sobre outro, com a soma que cada um recebe), da matriz **I − A** com o diagnóstico de invertibilidade, e barras do risco próprio (b) e efetivo (x) de cada ativo. Clicar num quadradinho mostra a conta daquela dependência. Lê só `/api/risco/passos`. |
 | **Gerenciador de Ativos** | Cadastro completo: **Novo**, **Editar** e **Excluir** ativos; adicionar falhas (com ou sem CVE) e mudar o status; criar e remover dependências. |
 | **Monitor do Serviço** | A saúde da API e o diário das 24 horas: uma marca por hora em que o servidor esteve no ar. |
 | **Assistente** | A **Gota**, no canto da tela. Fica quieta até ser chamada (só oferece um tour na primeira visita) e responde: como o risco é calculado, por que um ativo tem aquele risco, **o que é uma falha e como prevenir**, o que é a verificação de invertibilidade, como cadastrar, e onde cada parte está no código. |
@@ -265,7 +266,7 @@ Agora basta abrir no navegador `http://localhost:5000/api/risco` para ver o cál
 
 ## 🧪 Passo 4: Como rodar os Testes Automatizados
 
-O projeto possui uma pasta `testes` com **244 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
+O projeto possui uma pasta `testes` com **247 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
 
 ```bash
 python -m unittest discover -s testes -t .
@@ -328,6 +329,7 @@ cyber-asset-manager/
 │   │       ├── icones.js        #   ícones desenhados em SVG (e a Gota)
 │   │       ├── desenho.js       #   desenho do mapa em canvas
 │   │       ├── app_mapa.js      #   Mapa da Rede
+│   │       ├── app_matrizes.js  #   Matrizes (mapa de calor) e gráfico de barras
 │   │       ├── app_ativos.js    #   Gerenciador de Ativos (CRUD)
 │   │       ├── app_monitor.js   #   Monitor do Serviço e diário
 │   │       ├── explicacoes.js   #   o que o Assistente explica (cálculo, guia e código)
@@ -344,7 +346,7 @@ cyber-asset-manager/
 │       ├── gerenciador_*.py     # Cadastro de ativos e de dependências
 │       └── consultas.py         # Consultas com map, filter, sorted e reduce
 │
-├── testes/                      # 244 testes automatizados do sistema e da API
+├── testes/                      # 247 testes automatizados do sistema e da API
 ├── scripts/                     # verificar_servico.py: verificação e monitoramento de 24 h
 ├── docs/                        # API.md (rotas REST) e PADROES.md (padrões de projeto)
 ├── postman/                     # coleção Postman com testes de integração

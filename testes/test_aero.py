@@ -81,5 +81,50 @@ class TesteExplicacoesDoAssistente(unittest.TestCase):
                 self.assertTrue((self.RAIZ / caminho).exists(), caminho)
 
 
+class TesteMatrizesEGrafico(unittest.TestCase):
+    """A janela Matrizes só desenha /api/risco/passos: estes testes garantem que
+    ela está ligada à tela e que os dados que ela lê têm o formato esperado."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.c = criar_app(self.tmp.name).test_client()
+
+    def test_janela_esta_no_index_no_desktop_e_no_assistente(self):
+        self.assertIn("app_matrizes.js", (PASTA_AERO / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("AppMatrizes.abrir", (PASTA_AERO / "desktop.js").read_text(encoding="utf-8"))
+        self.assertIn("AppMatrizes.abrir", (PASTA_AERO / "app_assistente.js").read_text(encoding="utf-8"))
+        self.assertIn("matriz:", (PASTA_AERO / "icones.js").read_text(encoding="utf-8"))
+
+    def test_dados_lidos_pela_janela_tem_o_formato_esperado(self):
+        ids = [1, 2, 3]
+        campos = {3: {"modelo": "RB"}, 2: {"processador": "Xeon"}, 4: {"sgbd": "PostgreSQL"}}
+        for id_, nome, tipo in [(1, "Roteador", 3), (2, "Servidor", 2), (3, "Banco", 4)]:
+            r = self.c.post("/api/ativos", json={"tipo": tipo, "id": id_, "nome": nome, "setor": "TI",
+                                                 "responsavel": "Ana", **campos[tipo]})
+            self.assertEqual(r.status_code, 201, r.json)
+        for o, d, peso in [(1, 2, 0.3), (2, 3, 0.2)]:
+            r = self.c.post("/api/dependencias", json={"origem": o, "destino": d, "peso": peso})
+            self.assertEqual(r.status_code, 201, r.json)
+        d = self.c.get("/api/risco/passos").json
+        n = len(ids)
+        for campo in ("A", "I_menos_A"):
+            self.assertEqual(len(d[campo]), n)
+            self.assertTrue(all(len(linha) == n for linha in d[campo]))
+        self.assertEqual(len(d["b"]), n)
+        self.assertEqual(len(d["x"]), n)
+        self.assertEqual(len(d["somas_recebidas"]), n)
+        self.assertTrue(d["diagnostico"]["invertivel"])
+        # A[destino][origem]: o Servidor (linha 1) recebe 0,3 do Roteador (coluna 0)
+        self.assertAlmostEqual(d["A"][1][0], 0.3)
+        self.assertAlmostEqual(d["I_menos_A"][1][0], -0.3)
+        self.assertAlmostEqual(d["I_menos_A"][1][1], 1.0)
+
+    def test_sem_ativos_a_janela_recebe_listas_vazias(self):
+        d = self.c.get("/api/risco/passos").json
+        self.assertEqual(d["ativos"], [])
+        self.assertEqual(d["A"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -165,7 +165,7 @@ PASTA_AERO = Path(__file__).parent / "aero"
 # Só estes arquivos são servidos em /aero/<nome>; qualquer outro nome dá 404.
 ARQUIVOS_AERO = {
     "aero.css", "nucleo.js", "icones.js", "janelas.js", "desenho.js",
-    "app_ativos.js", "app_mapa.js", "app_monitor.js", "explicacoes.js",
+    "app_ativos.js", "app_mapa.js", "app_matrizes.js", "app_monitor.js", "explicacoes.js",
     "app_assistente.js", "desktop.js",
 }
 

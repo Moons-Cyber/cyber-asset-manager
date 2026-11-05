@@ -79,6 +79,7 @@ const AppAssistente = (() => {
   const PERGUNTAS = [
     ["Como o risco é calculado?", () => abrirCalculo()],
     ["Por que um ativo tem esse risco?", () => escolherAtivo()],
+    ["Como leio as matrizes e o gráfico?", () => AppMatrizes.abrir()],
     ["O que é uma falha e como prevenir?", () => escolherFalha()],
     ["O que é a verificação de invertibilidade?", () => abrirCalculo(Explicacoes.PASSO_INVERTIBILIDADE)],
     ["Como cadastro ativos, falhas e dependências?", () => abrirGuia("usar")],

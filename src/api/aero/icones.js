@@ -24,6 +24,15 @@ const Icones = (() => {
       <g fill="#fff" stroke="#06358f" stroke-width=".6"><circle cx="10" cy="20.5" r="2.4"/><circle cx="16" cy="10" r="2.4"/></g>
       <circle cx="22.5" cy="20" r="2.9" fill="#ff5a3c" stroke="#7a1305" stroke-width=".6"/>${BRILHO(12, 7.2, 7, 3.6)}</svg>`,
 
+    matriz: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>
+        <linearGradient id="ic-mx" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4faff"/><stop offset="1" stop-color="#c9dcf2"/></linearGradient></defs>
+      <rect x="2.500" y="2.500" width="27" height="27" rx="3.500" fill="url(#ic-mx)" stroke="#06358f" stroke-width=".9"/>
+      <g stroke="#06358f" stroke-width=".4">
+        <rect x="5" y="5" width="6.400" height="6.400" rx="1" fill="#1a6fe0"/><rect x="12.800" y="5" width="6.400" height="6.400" rx="1" fill="#9cc8fb"/><rect x="20.600" y="5" width="6.400" height="6.400" rx="1" fill="#e6f0fb"/>
+        <rect x="5" y="12.800" width="6.400" height="6.400" rx="1" fill="#e6f0fb"/><rect x="12.800" y="12.800" width="6.400" height="6.400" rx="1" fill="#0a49b8"/><rect x="20.600" y="12.800" width="6.400" height="6.400" rx="1" fill="#6aa7f5"/>
+        <rect x="5" y="20.600" width="6.400" height="6.400" rx="1" fill="#6aa7f5"/><rect x="12.800" y="20.600" width="6.400" height="6.400" rx="1" fill="#e6f0fb"/><rect x="20.600" y="20.600" width="6.400" height="6.400" rx="1" fill="#f08a24"/>
+      </g>${BRILHO(12, 4.800, 9, 2.200, 0.5)}</svg>`,
+
     monitor: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs>
         <linearGradient id="ic-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a8fff"/><stop offset="1" stop-color="#0a3a9e"/></linearGradient></defs>
       <rect x="3" y="4" width="26" height="18" rx="2.6" fill="#dfe8f5" stroke="#06358f" stroke-width=".9"/>

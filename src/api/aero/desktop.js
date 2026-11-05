@@ -9,6 +9,7 @@
 
   const PROGRAMAS = [
     { id: "mapa", titulo: "Mapa da Rede", curto: "Mapa da Rede", sub: "Ativos, dependências e risco", icone: "rede", abrir: () => AppMapa.abrir() },
+    { id: "matrizes", titulo: "Matrizes e Gráfico", curto: "Matrizes", sub: "Mapa de calor de A, I − A e riscos", icone: "matriz", abrir: () => AppMatrizes.abrir() },
     { id: "ativos", titulo: "Gerenciador de Ativos", curto: "Ativos", sub: "Cadastro, falhas e dependências", icone: "ativos", abrir: () => AppAtivos.abrir() },
     { id: "monitor", titulo: "Monitor do Serviço", curto: "Monitor 24h", sub: "Saúde e diário do container", icone: "monitor", abrir: () => AppMonitor.abrir() },
     { id: "assistente", titulo: "Assistente", curto: "Assistente", sub: "Explica a tela, a conta e o código", icone: "gota", abrir: () => AppAssistente.menu() },
