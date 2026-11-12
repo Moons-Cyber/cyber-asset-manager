@@ -17,6 +17,7 @@ from src.servicos.analise_risco import (
     diagnosticar_sistema,
 )
 from src.servicos.cliente_nvd import ClienteNVD, ErroNVD
+from src.persistencia.fabrica_repositorios import criar_repositorios, modo_do_ambiente
 from src.servicos.gerenciador_ativos import GerenciadorAtivos
 from src.servicos.gerenciador_dependencias import GerenciadorDependencias
 
@@ -872,9 +873,11 @@ def menu_dependencias(gerenciador, gerenciador_dependencias):
 
 def main():
     """Executa o menu principal do Cyber Asset Manager."""
-    gerenciador = GerenciadorAtivos("ativos.json")
+    # PERSISTENCIA=sqlite guarda tudo em inventario.db; o padrão continua JSON.
+    repo_ativos, repo_dependencias = criar_repositorios(".", modo_do_ambiente())
+    gerenciador = GerenciadorAtivos("ativos.json", repositorio=repo_ativos)
     gerenciador_dependencias = GerenciadorDependencias(
-        "dependencias.json"
+        "dependencias.json", repositorio=repo_dependencias
     )
     cliente_nvd = ClienteNVD("cache_cve.json")
 

@@ -6,9 +6,12 @@ memória nos testes, não exige mexer no gerenciador.
 """
 
 from abc import ABC, abstractmethod
+import json
 from pathlib import Path
 
-from src.persistencia.persistencia import Persistencia
+from src.modelos.dependencia import Dependencia
+from src.persistencia.erros import ErroDados
+from src.persistencia.persistencia import Persistencia, gravar_json_atomico
 
 
 class RepositorioAtivos(ABC):
@@ -48,3 +51,36 @@ class RepositorioAtivosMemoria(RepositorioAtivos):
 
     def salvar(self, ativos):
         self._ativos = list(ativos)
+
+
+class RepositorioDependencias(ABC):
+    """O mesmo padrão, para as dependências entre ativos."""
+
+    @abstractmethod
+    def listar(self):
+        """Devolve todas as dependências guardadas (lista vazia se não há nada)."""
+
+    @abstractmethod
+    def salvar(self, dependencias):
+        """Substitui o conteúdo guardado pela lista recebida."""
+
+
+class RepositorioDependenciasJson(RepositorioDependencias):
+    """Guarda as dependências num arquivo JSON (gravação atômica)."""
+
+    def __init__(self, caminho):
+        self.caminho = Path(caminho)
+
+    def listar(self):
+        if not self.caminho.exists():
+            return []
+        try:
+            with self.caminho.open("r", encoding="utf-8") as arquivo:
+                dados = json.load(arquivo)
+            return [Dependencia(**dado) for dado in dados]
+        except (ValueError, TypeError) as erro:
+            # ValueError cobre JSON inválido e também um peso inválido gravado.
+            raise ErroDados(f"Arquivo '{self.caminho}' inválido: {erro}") from erro
+
+    def salvar(self, dependencias):
+        gravar_json_atomico([d.para_dict() for d in dependencias], self.caminho)

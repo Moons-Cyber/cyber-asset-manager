@@ -9,6 +9,7 @@ services:
       - "2213:5000"
     environment:
       DADOS_DIR: /dados
+      PERSISTENCIA: ${PERSISTENCIA:-json}
       NVD_API_KEY: ${NVD_API_KEY:-}
     volumes:
       - dados:/dados

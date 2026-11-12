@@ -76,7 +76,7 @@ class TesteExplicacoesDoAssistente(unittest.TestCase):
 
     def test_arquivos_do_guia_existem(self):
         texto = (PASTA_AERO / "explicacoes.js").read_text(encoding="utf-8")
-        for caminho in re.findall(r'\["((?:src/|servidor|Dockerfile|docker-compose)[^" ]*)', texto):
+        for caminho in re.findall(r'\["((?:src/|servidor|Dockerfile|compose)[^" ]*)', texto):
             with self.subTest(caminho=caminho):
                 self.assertTrue((self.RAIZ / caminho).exists(), caminho)
 

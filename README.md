@@ -266,7 +266,7 @@ Agora basta abrir no navegador `http://localhost:5000/api/risco` para ver o cál
 
 ## 🧪 Passo 4: Como rodar os Testes Automatizados
 
-O projeto possui uma pasta `testes` com **247 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
+O projeto possui uma pasta `testes` com **293 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
 
 ```bash
 python -m unittest discover -s testes -t .
@@ -346,9 +346,9 @@ cyber-asset-manager/
 │       ├── gerenciador_*.py     # Cadastro de ativos e de dependências
 │       └── consultas.py         # Consultas com map, filter, sorted e reduce
 │
-├── testes/                      # 247 testes automatizados do sistema e da API
-├── scripts/                     # verificar_servico.py: verificação e monitoramento de 24 h
-├── docs/                        # API.md (rotas REST) e PADROES.md (padrões de projeto)
+├── testes/                      # 293 testes automatizados do sistema e da API
+├── scripts/                     # verificar_servico.py (verificação e monitoramento de 24 h) e cliente_requests.py (cliente de exemplo)
+├── docs/                        # API.md (rotas REST), PADROES.md (padrões de projeto) e ARQUITETURA.md (cliente-servidor, com diagrama) e BANCO_DE_DADOS.md (SQLite, JOINs e relatórios)
 └── dados_ficticios/             # Rede de exemplo para visualizar a interface (fora do Git)
 ```
 

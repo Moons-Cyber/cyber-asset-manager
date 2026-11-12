@@ -12,11 +12,13 @@ Configuração por variáveis de ambiente:
     DIARIO_INTERVALO_S   segundos entre os cálculos anotados no diário
                          (padrão 3600 = 1 h; 0 anota só ao ligar; -1 desliga)
     DIARIO_MAX_ENTRADAS  máximo de entradas guardadas no diário (padrão 1000)
+    PERSISTENCIA         json (padrão) ou sqlite (guarda tudo em DADOS_DIR/inventario.db)
 """
 
 import os
 
 from src.api.aplicacao import criar_app
+from src.persistencia.fabrica_repositorios import modo_do_ambiente
 
 _intervalo = int(os.environ.get("DIARIO_INTERVALO_S", "3600"))
 
@@ -24,6 +26,7 @@ app = criar_app(
     os.environ.get("DADOS_DIR", "."),
     diario_intervalo=None if _intervalo < 0 else _intervalo,
     diario_max=int(os.environ.get("DIARIO_MAX_ENTRADAS", "1000")),
+    persistencia=modo_do_ambiente(),
 )
 
 if __name__ == "__main__":

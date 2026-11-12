@@ -40,6 +40,7 @@ from src.servicos.cliente_nvd import (
     CVENaoEncontrado,
     NVDIndisponivel,
 )
+from src.persistencia.fabrica_repositorios import criar_repositorios
 from src.servicos.gerenciador_ativos import GerenciadorAtivos
 from src.servicos.gerenciador_dependencias import GerenciadorDependencias
 
@@ -66,6 +67,10 @@ def _corpo_json():
     return corpo
 
 
+ID_MAXIMO = 2_147_483_647          # acima disso o JavaScript perderia precisão
+TAMANHO_MAXIMO_CORPO = 256 * 1024  # um cadastro tem poucas centenas de bytes
+
+
 def _texto(corpo, campo, obrigatorio=True):
     valor = corpo.get(campo)
 
@@ -80,7 +85,7 @@ def _texto(corpo, campo, obrigatorio=True):
     return valor.strip()
 
 
-def _inteiro(corpo, campo, minimo=1):
+def _inteiro(corpo, campo, minimo=1, maximo=None):
     valor = corpo.get(campo)
 
     if valor is None:
@@ -91,6 +96,9 @@ def _inteiro(corpo, campo, minimo=1):
         raise ErroApi(
             f"O campo '{campo}' deve ser um inteiro maior ou igual a {minimo}."
         )
+
+    if maximo is not None and valor > maximo:
+        raise ErroApi(f"O campo '{campo}' deve ser no máximo {maximo}.")
 
     return valor
 
@@ -171,7 +179,7 @@ ARQUIVOS_AERO = {
 
 
 def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
-              diario_max=None):
+              diario_max=None, persistencia="json"):
     """Cria a aplicação Flask.
 
     pasta_dados: onde ficam ativos.json, dependencias.json e cache_cve.json.
@@ -181,16 +189,21 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
                  testes); 0 anota só ao ligar; N > 0 anota também a cada
                  N segundos, numa thread de fundo.
     diario_max: máximo de entradas guardadas no diario.json.
+    persistencia: "json" (padrão) guarda ativos.json e dependencias.json;
+                 "sqlite" guarda tudo em inventario.db, na mesma pasta.
     """
     pasta = Path(pasta_dados)
     pasta.mkdir(parents=True, exist_ok=True)
 
     app = Flask(__name__)
+    app.config["MAX_CONTENT_LENGTH"] = TAMANHO_MAXIMO_CORPO
     app.json.ensure_ascii = False        # acentos legíveis no JSON
     app.json.sort_keys = False           # mantém a ordem dos campos
 
-    gerenciador = GerenciadorAtivos(pasta / "ativos.json")
-    gerenciador_dependencias = GerenciadorDependencias(pasta / "dependencias.json")
+    repo_ativos, repo_dependencias = criar_repositorios(pasta, persistencia)
+    gerenciador = GerenciadorAtivos(pasta / "ativos.json", repositorio=repo_ativos)
+    gerenciador_dependencias = GerenciadorDependencias(
+        pasta / "dependencias.json", repositorio=repo_dependencias)
     nvd = cliente_nvd or ClienteNVD(pasta / "cache_cve.json")
 
     # Cadeado dos dados: o dict em memória não é seguro para escritas
@@ -421,7 +434,7 @@ def criar_app(pasta_dados=".", cliente_nvd=None, diario_intervalo=None,
             raise ErroApi(f"Tipo inexistente. Códigos válidos: {codigos}.") from None
 
         classe = CLASSE_POR_TIPO[tipo]
-        identificador = _inteiro(corpo, "id")
+        identificador = _inteiro(corpo, "id", maximo=ID_MAXIMO)
         nome = _texto(corpo, "nome")
         responsavel = _texto(corpo, "responsavel")
         setor = _texto(corpo, "setor")

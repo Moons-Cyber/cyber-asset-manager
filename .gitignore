@@ -10,3 +10,7 @@ dependencias.json
 # Surto (interface web)
 diario_surto.json
 dados_ficticios/
+*.db
+*.bak
+*.db
+relatorio_sql.txt

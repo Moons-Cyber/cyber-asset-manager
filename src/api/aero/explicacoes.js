@@ -323,7 +323,7 @@ const Explicacoes = (() => {
       ["src/api/aplicacao.py", "As rotas REST em Flask (GET, POST, PATCH, DELETE), os erros em JSON e a trava contra gravações simultâneas."],
       ["servidor.py", "Ponto de entrada: lê as variáveis de ambiente e cria a aplicação."],
       ["Dockerfile", "Como a imagem é montada: Python, dependências, gunicorn e o HEALTHCHECK que chama /api/saude."],
-      ["docker-compose.yml", "Sobe o container com volume para os dados e `restart: unless-stopped` para voltar sozinho."],
+      ["compose.yml", "Sobe o container com volume para os dados e `restart: unless-stopped` para voltar sozinho."],
       ["src/api/aero/", "Esta interface (HTML, CSS e JavaScript). Ela só conversa com a API REST."],
     ] },
   ];

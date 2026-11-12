@@ -19,6 +19,16 @@
             "invertivel": true,
             "condicao": 1.0,
             "erro": null
+        },
+        {
+            "t": 1794504343,
+            "motivo": "inicialização",
+            "ativos": 5,
+            "dependencias": 0,
+            "risco_global": 47.8,
+            "invertivel": true,
+            "condicao": 1.0,
+            "erro": null
         }
     ]
 }

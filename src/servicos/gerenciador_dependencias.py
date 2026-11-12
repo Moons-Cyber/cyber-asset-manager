@@ -1,50 +1,27 @@
 """Gerencia as dependências entre ativos."""
 
-import json
 import math
 from pathlib import Path
 
-from src.modelos.dependencia import Dependencia, soma_de_pesos_valida
-from src.persistencia.erros import ErroDados
-from src.persistencia.persistencia import gravar_json_atomico
+from src.modelos.dependencia import soma_de_pesos_valida
+from src.persistencia.repositorio import RepositorioDependenciasJson
 
 
 class GerenciadorDependencias:
     """Cadastra, lista e persiste dependências entre ativos."""
 
-    def __init__(self, caminho_arquivo="dependencias.json"):
+    def __init__(self, caminho_arquivo="dependencias.json", repositorio=None):
         self.caminho_arquivo = Path(caminho_arquivo)
+        # Repository: JSON por padrão; pode ser SQLite (ver fabrica_repositorios).
+        self.repositorio = repositorio or RepositorioDependenciasJson(self.caminho_arquivo)
 
     def listar_dependencias(self):
         """Carrega as dependências persistidas."""
-        if not self.caminho_arquivo.exists():
-            return []
-
-        try:
-            with self.caminho_arquivo.open(
-                "r",
-                encoding="utf-8",
-            ) as arquivo:
-                dados = json.load(arquivo)
-
-            return [
-                Dependencia(**dado)
-                for dado in dados
-            ]
-        except (ValueError, TypeError) as erro:
-            # ValueError cobre JSON inválido e também um peso inválido gravado.
-            raise ErroDados(
-                f"Arquivo '{self.caminho_arquivo}' inválido: {erro}"
-            ) from erro
+        return self.repositorio.listar()
 
     def salvar_dependencias(self, dependencias):
-        """Salva a lista de dependências em formato JSON (gravação atômica)."""
-        dados = [
-            dependencia.para_dict()
-            for dependencia in dependencias
-        ]
-
-        gravar_json_atomico(dados, self.caminho_arquivo)
+        """Grava a lista de dependências (de forma atômica)."""
+        self.repositorio.salvar(dependencias)
 
     def cadastrar_dependencia(self, dependencia, ativos):
         """Cadastra uma dependência após validar sua consistência."""
