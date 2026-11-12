@@ -1,10 +1,10 @@
-name: trab02_2026_2_12621CBS213
+name: trab02_2026_2_12621cbs213
 
 services:
   inventario:
     build: .
-    image: trab02_2026_2_12621CBS213:latest
-    container_name: trab02_2026_2_12621CBS213
+    image: trab02_2026_2_12621cbs213:latest
+    container_name: trab02_2026_2_12621cbs213
     ports:
       - "2213:5000"
     environment:
@@ -21,4 +21,4 @@ services:
 
 volumes:
   dados:
-    name: trab02_2026_2_12621CBS213_dados
+    name: trab02_2026_2_12621cbs213_dados
