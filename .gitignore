@@ -6,6 +6,8 @@ cache_cve.json
 .env
 monitoramento*.csv
 dependencias.json
+ativos.json
+diario.json
 
 # Surto (interface web)
 diario_surto.json

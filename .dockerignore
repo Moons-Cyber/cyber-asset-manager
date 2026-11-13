@@ -23,7 +23,7 @@ monitoramento*.csv
 empacotar_projeto.py
 src/algoritimos
 Dockerfile
-docker-compose.yml
+compose.yaml
 .dockerignore
 
 # Surto (interface web)

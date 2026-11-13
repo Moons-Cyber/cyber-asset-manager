@@ -1,8 +1,10 @@
 # 🛡️ Cyber Asset Manager (Inventário de Ativos e Análise de Risco)
 
+**Identificador do trabalho:** `trab02_2026_2_12621cbs213`
+
 Bem-vindo ao **Cyber Asset Manager**! Este é um sistema criado para gerenciar a segurança digital de uma rede de computadores. Com ele, você pode cadastrar equipamentos (**ativos**), registrar falhas de segurança (**vulnerabilidades / CVEs**) — buscando a gravidade delas automaticamente na internet (base oficial do NVD) — e mapear como um equipamento depende de outro.
 
-A partir dessas informações, o programa usa **álgebra linear** para diagnosticar a rede e calcular o **risco efetivo** de cada equipamento, salvando tudo automaticamente em arquivos JSON (`ativos.json`, `dependencias.json` e `cache_cve.json`).
+A partir dessas informações, o programa usa **álgebra linear** para diagnosticar a rede e calcular o **risco efetivo** de cada equipamento, salvando tudo automaticamente em arquivos JSON (`ativos.json`, `dependencias.json` e `cache_cve.json`). Opcionalmente, os ativos, as vulnerabilidades e as dependências podem ficar em um banco **SQLite** (veja a seção *Persistência*).
 
 O sistema pode ser usado de três jeitos, todos sobre o mesmo núcleo:
 
@@ -21,8 +23,8 @@ Para executar os comandos deste guia, você precisa abrir o **Terminal** (Prompt
 Se você tiver o [Git](https://git-scm.com/downloads) instalado, copie e cole os comandos abaixo (um por linha, apertando `Enter` ao final de cada um):
 
 ```bash
-git clone https://github.com/Moons-Cyber/cyber-asset-manager.git
-cd cyber-asset-manager
+git clone https://github.com/Moons-Cyber/trab02_2026_2_12621cbs213.git
+cd trab02_2026_2_12621cbs213
 ```
 *(Se preferir não usar o Git, clique no botão verde **`<> Code`** no topo da página do GitHub, escolha **`Download ZIP`**, extraia a pasta no seu computador e abra o Terminal dentro dela).*
 
@@ -37,29 +39,25 @@ Com o [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalad
    ```bash
    docker compose up -d --build
    ```
-2. O Docker vai preparar o ambiente Python 3.14 e ligar o servidor **Gunicorn** na porta **5000** automaticamente.
+2. O Docker vai preparar o ambiente Python 3.14 e ligar o servidor **Gunicorn** automaticamente. Dentro do container ele escuta na porta 5000, que é publicada no computador como **2213** (`2213:5000`).
 3. Para ter certeza de que funcionou, confira se o container está saudável (`healthy`):
    ```bash
    docker ps
    ```
    e abra no navegador:
    ```text
-   http://localhost:5000/api/saude     (a API respondendo)
-   http://localhost:5000/aero          (a interface web)
+   http://localhost:2213/api/saude     (a API respondendo)
+   http://localhost:2213/aero          (a interface web)
    ```
 4. **Para desligar o servidor quando terminar:**
    ```bash
    docker compose down
    ```
-   Os dados ficam guardados no volume `dados` (pasta `/dados` dentro do container) e continuam lá na próxima vez que você ligar. Só um `docker compose down -v` apaga o volume.
+   Os dados ficam guardados no volume `dados` (pasta `/dados` dentro do container) e continuam lá na próxima vez que você ligar. O volume se chama `trab02_2026_2_12621cbs213_dados`; só um `docker compose down -v` o apaga.
 
-> 💡 **Dica para servidores compartilhados ou uso avançado (`.env`):**  
-> Você pode criar um arquivo chamado `.env` na pasta do projeto para trocar a porta (`HOST_PORT=5000`), o nome do container (`CONTAINER_NAME=inventario-ativos`) ou adicionar uma chave gratuita do NVD (`NVD_API_KEY=sua_chave`) para deixar as consultas de vulnerabilidades mais rápidas.
+> 💡 **Padronização (servidor da faculdade):** o `compose.yaml` usa o identificador `trab02_2026_2_12621cbs213` para o projeto Compose, a imagem, o container e o volume, e a porta externa é `2000 + 3 últimos dígitos da matrícula` (`2213`). Para consultas de vulnerabilidades mais rápidas, crie um arquivo `.env` com uma chave gratuita do NVD: `NVD_API_KEY=sua_chave`.
 
-> 🔒 **Por segurança, a porta só é publicada em `127.0.0.1`** (o próprio computador). Num servidor remoto, para ver a interface no seu navegador, abra um túnel SSH e acesse `http://127.0.0.1:5000/aero` no seu PC:
-> ```bash
-> ssh -L 5000:127.0.0.1:5000 SEU_USUARIO@ENDERECO_DO_SERVIDOR
-> ```
+> 🔓 **Atenção:** a porta `2213` é publicada para a rede (sem `127.0.0.1`), para que o professor consiga acessar. A API **não tem autenticação**; veja as *Limitações conhecidas*.
 
 ---
 
@@ -95,7 +93,7 @@ Com o [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalad
      ```bash
      python servidor.py
      ```
-     Depois abra `http://localhost:5000/aero` no navegador.
+     Depois abra `http://localhost:5000/aero` no navegador (sem Docker a porta é a 5000; no Docker, use a 2213).
 
 ### Quer ver a interface com dados de exemplo?
 A pasta `dados_ficticios/` traz uma rede de exemplo (10 ativos e 11 dependências). Para não misturar com os seus dados reais, aponte o servidor para ela:
@@ -107,7 +105,8 @@ A pasta `dados_ficticios/` traz uma rede de exemplo (10 ativos e 11 dependência
 
 | Variável | Para que serve | Padrão |
 | :--- | :--- | :--- |
-| `DADOS_DIR` | Pasta onde ficam `ativos.json`, `dependencias.json`, `cache_cve.json` e `diario.json` | pasta atual (no Docker: `/dados`) |
+| `DADOS_DIR` | Pasta onde ficam `ativos.json`, `dependencias.json`, `cache_cve.json`, `diario.json` e, no modo SQLite, `inventario.db` | pasta atual (no Docker: `/dados`) |
+| `PERSISTENCIA` | Onde guardar ativos e dependências: `json` ou `sqlite` | `json` |
 | `HOST` / `PORT` | Endereço e porta do servidor de desenvolvimento | `127.0.0.1` / `5000` |
 | `NVD_API_KEY` | Chave gratuita do NVD (consultas mais rápidas) | vazia |
 | `DIARIO_INTERVALO_S` | Segundos entre os cálculos anotados no diário (`0` = só ao ligar, `-1` = desliga) | `3600` (1 hora) |
@@ -117,7 +116,7 @@ A pasta `dados_ficticios/` traz uma rede de exemplo (10 ativos e 11 dependência
 
 ## 🫧 A interface web
 
-Abra `http://localhost:5000/aero`. É um desktop no estilo Frutiger Aero / Windows XP, com janelas arrastáveis, barra de tarefas, menu iniciar e um escudo na bandeja que mostra se o serviço está no ar. Os ícones, o fundo e o mascote foram desenhados do zero (SVG e canvas); a página usa só fontes do sistema e não baixa nada da internet, então funciona até num servidor sem acesso externo.
+Abra `/aero` (`http://localhost:2213/aero` no Docker ou `http://localhost:5000/aero` rodando direto). É um desktop no estilo Frutiger Aero / Windows XP, com janelas arrastáveis, barra de tarefas, menu iniciar e um escudo na bandeja que mostra se o serviço está no ar. Os ícones, o fundo e o mascote foram desenhados do zero (SVG e canvas); a página usa só fontes do sistema e não baixa nada da internet, então funciona até num servidor sem acesso externo.
 
 | Janela | O que faz |
 | :--- | :--- |
@@ -147,9 +146,33 @@ No celular, as janelas abrem em tela cheia e o Assistente fica no ícone da áre
 
 ---
 
+## 🗄️ Persistência: JSON (padrão) ou SQLite
+
+Os dados podem ser guardados de duas formas, escolhidas pela variável `PERSISTENCIA`. O restante do sistema não muda, porque ele só conhece a interface `RepositorioAtivos` / `RepositorioDependencias` (padrões **Repository** e **Factory**; veja `docs/PADROES.md`).
+
+| Modo | Onde ficam os dados | Quando usar |
+| :--- | :--- | :--- |
+| `json` (padrão) | `ativos.json` e `dependencias.json`, com gravação atômica | Requisito do trabalho: arquivo em formato JSON |
+| `sqlite` | `inventario.db`, com 4 tabelas: `ativos`, `vulnerabilidades`, `ativo_vulnerabilidade` (N:N, com o status da falha naquele ativo) e `dependencias` | Consultas com `JOIN`, `GROUP BY` e relatórios |
+
+```bash
+# Rodando direto (PowerShell)
+$env:PERSISTENCIA="sqlite"; python servidor.py
+
+# Migrar os dados do JSON para o banco (só copia, não apaga o JSON)
+python scripts/migrar_json_para_sqlite.py
+
+# Relatórios feitos só com SQL (JOINs, agregações e risco)
+python scripts/relatorio_sql.py
+```
+
+No Docker, `PERSISTENCIA` já aparece no `compose.yaml` com o padrão `json`; para usar o SQLite, defina `PERSISTENCIA=sqlite` no `.env`. As consultas ficam em `sql/consultas.sql`, o esquema em `sql/esquema.sql` e a explicação completa em `docs/BANCO_DE_DADOS.md`. As consultas usam parâmetros (`?`), nunca texto montado à mão, para evitar *SQL injection* (CWE-89).
+
+---
+
 ## 🌐 Passo 3: Como usar a API passo a passo (Para Iniciantes)
 
-Quando o servidor da API está ligado (na porta `5000`), você pode interagir com ele de duas formas:
+Quando o servidor da API está ligado, você pode interagir com ele de duas formas. Os exemplos abaixo usam a porta `5000` (execução direta com `python servidor.py`); **no Docker, troque `5000` por `2213`**.
 
 ### 1. Consultas rápidas direto pelo Navegador de Internet (`GET`)
 Basta abrir o Google Chrome, Edge ou Firefox e colar qualquer um dos endereços abaixo na barra de endereços:
@@ -266,7 +289,7 @@ Agora basta abrir no navegador `http://localhost:5000/api/risco` para ver o cál
 
 ## 🧪 Passo 4: Como rodar os Testes Automatizados
 
-O projeto possui uma pasta `testes` com **293 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
+O projeto possui uma pasta `testes` com **mais de 270 testes** que garantem que nenhuma regra de negócio, cálculo de risco ou rota da API quebre após alterações no código. Para executá-los (com o `.venv` ativado), **na pasta raiz do projeto**:
 
 ```bash
 python -m unittest discover -s testes -t .
@@ -278,44 +301,39 @@ Entre eles, `test_passos.py` confere o cálculo etapa por etapa contra uma conta
 
 ## ⏱️ Teste de 24 horas (Docker no servidor)
 
-1. Suba o container: `docker compose up -d --build`
+1. Suba o container (no servidor, dentro da pasta `trab02_2026_2_12621cbs213`): `docker compose up -d --build`
 2. Confira que está saudável: `docker ps` (deve aparecer `healthy`)
 3. Rode a verificação completa (cria ativos de teste, confere vulnerabilidade, dependência e risco, e apaga tudo no final; código de saída `0` = tudo certo). Com `--testar-nvd`, testa também a consulta ao NVD:
    ```bash
-   python scripts/verificar_servico.py http://127.0.0.1:5000
+   python scripts/verificar_servico.py http://127.0.0.1:2213
    ```
 4. Monitore por 24 horas (uma consulta por minuto, gravada em `monitoramento.csv`):
    ```bash
-   python scripts/verificar_servico.py http://127.0.0.1:5000 --monitorar 24 --intervalo 60
+   python scripts/verificar_servico.py http://127.0.0.1:2213 --monitorar 24 --intervalo 60
    ```
    Ao final, ele mostra a disponibilidade e a maior sequência de falhas.
 5. Confira quando o container ligou e quantas vezes reiniciou:
    ```bash
-   docker inspect -f '{{.State.StartedAt}} reinícios={{.RestartCount}}' inventario-ativos
+   docker inspect -f '{{.State.StartedAt}} reinícios={{.RestartCount}}' trab02_2026_2_12621cbs213
    ```
 6. No fim, o **Monitor do Serviço** da interface mostra uma marca por hora em que o servidor esteve no ar.
 
 O container reinicia sozinho se cair (`restart: unless-stopped`), os dados ficam no volume e toda gravação é atômica (um arquivo temporário substitui o antigo de uma vez só). Ele roda **um processo com 8 threads** de propósito: os ativos ficam num dicionário em memória, e vários processos teriam cópias diferentes dos dados.
 
-> 💡 Num servidor compartilhado por vários alunos, crie um `.env` ao lado do `docker-compose.yml` para não colidir nome e porta com os dos colegas:
-> ```
-> HOST_PORT=5217
-> CONTAINER_NAME=inventario-meunome
-> IMAGE_TAG=1.0
-> ```
+> 💡 Num servidor compartilhado, **nunca** use comandos em massa (`docker rm $(docker ps -aq)`, `prune`): eles atingem os containers dos colegas. Pare só o seu: `docker compose down` (sem `-v`, para não apagar o volume).
 
 ---
 
 ## 📂 Estrutura de Pastas do Projeto
 
 ```text
-cyber-asset-manager/
+trab02_2026_2_12621cbs213/   (Cyber Asset Manager)
 │
 ├── main.py                      # Menu interativo para usar pelo Terminal
 ├── servidor.py                  # Ponto de entrada da API (lê as variáveis de ambiente)
 ├── requirements.txt             # Bibliotecas necessárias (Flask, Gunicorn, NumPy, etc.)
 ├── Dockerfile                   # Imagem Docker segura (Python 3.14, usuário sem privilégios)
-├── docker-compose.yml           # Container, porta 5000, volume /dados e reinício automático
+├── compose.yaml                 # Projeto trab02_2026_2_12621cbs213: container, porta 2213:5000, volume /dados e reinício automático
 ├── .dockerignore                # Arquivos que nunca entram na imagem (dados, testes, .env)
 │
 ├── src/
@@ -337,6 +355,9 @@ cyber-asset-manager/
 │   │       └── desktop.js       #   ícones, menu iniciar, bandeja e tela de entrada
 │   ├── modelos/                 # Classes de Ativo, Vulnerabilidade, Dependência e Enums
 │   ├── persistencia/            # JSON com gravação atômica, Factory (fabrica_ativos.py) e Repository (repositorio.py)
+│   │   ├── repositorio_sqlite.py   #   repositórios em SQLite (mesma interface do JSON)
+│   │   ├── fabrica_repositorios.py #   escolhe JSON ou SQLite pela variável PERSISTENCIA
+│   │   └── esquema.sql             #   as 4 tabelas
 │   └── servicos/
 │       ├── analise_risco.py     # Monta M, v, F e A; resolve (I − A)x = b, diagnostica e explica as etapas
 │       ├── diario.py            # Anotação periódica do risco (prova das 24 h)
@@ -344,21 +365,23 @@ cyber-asset-manager/
 │       ├── orientacao_seguranca.py # O que é cada tipo de falha e como prevenir (CWE)
 │       ├── cliente_nvd.py       # Consulta ao NVD com cache e limite de requisições
 │       ├── gerenciador_*.py     # Cadastro de ativos e de dependências
+│       ├── relatorios_sql.py    # Relatórios feitos com SQL (JOIN, GROUP BY) sobre o SQLite
 │       └── consultas.py         # Consultas com map, filter, sorted e reduce
 │
-├── testes/                      # 293 testes automatizados do sistema e da API
-├── scripts/                     # verificar_servico.py (verificação e monitoramento de 24 h) e cliente_requests.py (cliente de exemplo)
-├── docs/                        # API.md (rotas REST), PADROES.md (padrões de projeto) e ARQUITETURA.md (cliente-servidor, com diagrama) e BANCO_DE_DADOS.md (SQLite, JOINs e relatórios)
+├── testes/                      # Testes automatizados do sistema, da API e do SQLite (test_sqlite.py)
+├── sql/                         # esquema.sql e consultas.sql (JOINs, agregações)
+├── scripts/                     # verificar_servico.py (24 h), cliente_requests.py, migrar_json_para_sqlite.py e relatorio_sql.py
+├── docs/                        # API.md (rotas REST), PADROES.md (padrões de projeto), ARQUITETURA.md (cliente-servidor, com diagrama) e BANCO_DE_DADOS.md (SQLite, JOINs e relatórios)
 └── dados_ficticios/             # Rede de exemplo para visualizar a interface (fora do Git)
 ```
 
-Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json` e `diario.json`) são criados pelo próprio programa durante o uso, ficam na pasta de `DADOS_DIR` (no Docker, dentro do volume) e não devem ir para o repositório.
+Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json`, `diario.json` e `inventario.db`) são criados pelo próprio programa durante o uso, ficam na pasta de `DADOS_DIR` (no Docker, dentro do volume) e não devem ir para o repositório.
 
 ---
 
 ## ⚠️ Limitações conhecidas
 
-- A API **não tem autenticação**: qualquer pessoa que alcance a porta pode alterar os dados. Por isso o Docker publica a porta só em `127.0.0.1`.
+- A API **não tem autenticação**: qualquer pessoa que alcance a porta `2213` pode alterar os dados. O acesso fica limitado pela rede do servidor; o controle de usuários e perfis está previsto como trabalho futuro.
 - **Não rode o menu de terminal e a API ao mesmo tempo sobre os mesmos arquivos:** cada um guarda os dados na memória por conta própria, e um sobrescreveria as mudanças do outro.
 - A "descrição curta" de um CVE é a primeira frase do texto do NVD, cortada em tamanho fixo e em inglês; não é um resumo nem uma tradução.
 
@@ -369,5 +392,6 @@ Os arquivos de dados (`ativos.json`, `dependencias.json`, `cache_cve.json` e `di
 - [x] **Interface Web Completa (Front-end):** desktop no estilo Windows XP consumindo as rotas do `aplicacao.py`.
 - [x] **Visualização de Grafos de Dependência:** o Mapa da Rede, com o risco efetivo de cada ativo.
 - [x] **Assistente explicativo:** o cálculo passo a passo com os dados reais e o mapa do código.
+- [x] **Persistência em SQLite (opcional):** repositório, migração a partir do JSON e relatórios com JOIN e GROUP BY.
 - [ ] **Autenticação na API:** exigir login ou chave para alterar dados.
 - [ ] **Exportar relatórios:** baixar o risco e o diário em CSV pela interface.
